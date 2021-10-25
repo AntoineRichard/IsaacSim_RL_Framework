@@ -16,7 +16,7 @@ heron_cob = np.array([0,0,0])
 HeronHydroSettings = {
     "fluid_density":1028,
     "link": [{
-        "name": "dummy_link", #RigidBody path
+        "name": "/heron/dummy_link", #RigidBody path
         "volume":0.13,
         "box":np.array([heron_length, heron_width, heron_height]),
         "center_of_buoyancy":heron_cob,
@@ -29,7 +29,7 @@ HeronHydroSettings = {
             "offset_added_mass":0.0,
             "linear_damping":np.eye(6)*np.array([-16.44998712, -15.79776044, -100,-13,-13, -6]),
             "quadratic_damping":np.eye(6)*np.array([-2.942, -2.7617212, -10, -5, -5, -5]),
-            "linear_damping_forward_speed":np.zeros([6]),
+            "linear_damping_forward_speed":np.eye(6)*np.zeros([6]),
             "offset_linear_damping":0.0,
             "offset_lin_forward_damping_speed":0.0,
             "offset_nonlin_damping":0.0,
@@ -37,6 +37,7 @@ HeronHydroSettings = {
         }
     }]
 }
+"""
 HeronThrusters = {[
     {
         "linkName":"thruster_0", #RigidBody path
@@ -80,3 +81,4 @@ HeronThrusters = {[
         }
     }]
 }
+"""

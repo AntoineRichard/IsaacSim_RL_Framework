@@ -77,7 +77,7 @@ class HydrodynamicModel(BuoyantObject):
             self._last_vel_rel = velRel
             return
 
-        dt = time - self._last_time
+        dt = time#time - self._last_time
         if dt <= 0.0:
             return
 
@@ -93,7 +93,6 @@ class HydrodynamicModel(BuoyantObject):
         self._filtered_acc = (1.0 - alpha) * self._filtered_acc + alpha * acc
         self._last_time = time
         self._last_vel_rel = velRel.copy()
-        #return velRel
 
     @staticmethod
     def ToNED(vec):

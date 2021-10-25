@@ -11,7 +11,7 @@ import math
 import PhysxUtils as utils
 
 class BuoyantObject:
-    def __init__(self, stage, prim_path, PhysXIFace, physics_path="physicsScene"):
+    def __init__(self, stage, prim_path, PhysXIFace, physics_path="/physicsScene"):
         # Build APIs
         self._RigidBodyAPI, self._MassAPI, self._SceneAPI = utils.getUsdPhysicsAPIs(stage, prim_path, physics_path)
         # Volume of fluid displaced by the submerged object
@@ -48,7 +48,7 @@ class BuoyantObject:
         # Flag set to true if the vessel has reached its submerged height
         self._is_surface_vessel_floating = False
         # TMP for calculation of the buoyancy force close to the surface
-        self._bounding_box = utils.getBoundingBox(self._stage, self._prim_path)
+        self._bounding_box = np.array([1,1,1])#utils.getBoundingBox(self._stage, self._prim_path)
         self._height = self._bounding_box[2]
         self._mass = utils.getMass(self._MassAPI)
 

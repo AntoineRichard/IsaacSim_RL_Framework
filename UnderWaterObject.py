@@ -30,7 +30,6 @@ class UnderwaterObject:
             fluidDensity = settings["fluid_density"]
         if "use_global_current" in settings.keys():
             self._useGlobalCurrent = settings["use_global_current"]
-        gAcc = utils.getGravity(self._stage)
         self.baseLinkName = ""
         if "link" in settings:
             for linkSettings in settings["link"]:
@@ -53,6 +52,7 @@ class UnderwaterObject:
 
                 # Creating a new hydrodynamic model for this link
                 hydro = HydroModelMap[linkSettings["hydrodynamic_model"]["type"]](self._stage, linkName, self._PhysXIFace, linkSettings)
+                gAcc = utils.getGravity(hydro._SceneAPI)
                 hydro.SetFluidDensity(fluidDensity)
                 hydro.SetGravity(gAcc)
 
