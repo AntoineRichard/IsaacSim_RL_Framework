@@ -9,19 +9,19 @@ from HydrodynamicModel import *
 from HMFossenModels import *
 import PhysxUtils as utils
 
-class UnderwaterObjectPlugin:
-    def __init__(self, stage, physxIFace):        
+class UnderwaterObject:
+    def __init__(self, stage, PhysXIFace):        
         # Pairs of links & corresponding hydrodynamic models
         self._models = {}
         self._stage = stage
-        self._physxIFace = physxIFace
+        self._PhysXIFace = PhysXIFace
         # Flow velocity vector read from topic
         self._flowVelocity = np.zeros([3])
         # Name of vehicle's base_link
         self._baseLinkName = None
         # Flag to use the global current velocity or the individually
         # assigned current velocity
-        self._useGlobalCurrent = False
+        self._useGlobalCurrent = True
 
     def Load(self, settings):
         # Get the fluid density, if present
@@ -40,31 +40,33 @@ class UnderwaterObjectPlugin:
                     found = linkName.split("base_link")
                     if len(found) > 1:
                         self._baseLinkName = linkName
-                        utils.print("Name of the BASE_LINK: " + self._baseLinkName)
-                    prim = utils.getPrimAtLink(self._stage, linkName)
-                    if not prim:
-                        utils.print("Specified link [" + linkName + "] not found.")
+                        utils.Print("Name of the BASE_LINK: " + self._baseLinkName)
+                    else:
+                        utils.Print("Name of RigidBody: " + linkName)
+                    rigidBody = utils.getRigidBodyAtPath(self._stage, linkName)
+                    if not rigidBody:
+                        utils.Print("Specified link [" + linkName + "] not found.")
                         continue
                 else:
-                    utils.print("Attribute name missing from link [" + linkName + "]")
+                    utils.Print("Attribute name missing from link [" + linkName + "]")
                     continue
 
                 # Creating a new hydrodynamic model for this link
-                hydro = HydroModelMap[linkSettings["hydrodynamic_model"]["type"]](linkSettings)
+                hydro = HydroModelMap[linkSettings["hydrodynamic_model"]["type"]](self._stage, linkName, self._PhysXIFace, linkSettings)
                 hydro.SetFluidDensity(fluidDensity)
                 hydro.SetGravity(gAcc)
 
                 self._models[linkName] = hydro
                 self._models[linkName].Print("all")
 
-    def Update(self, info):
-        time = info.simTime.Double()
-        for link, hydro in self._models:
-            linearAccel = np.linalg.norm(utils.getRelativeLinearAccel(link))
-            angularAccel = np.linalg.norm(utils.getRelativeAngularAccel(link))
-            utils.Assert((not math.isnan(linearAccel)) and (not math.isnan(angularAccel)),
-              "Linear or angular accelerations are invalid.")
+    def Update(self, time):
+        for hydro in self._models.values():
+            #linearAccel = np.linalg.norm(utils.getRelativeLinearAccel(link))
+            #angularAccel = np.linalg.norm(utils.getRelativeAngularAccel(link))
+            #utils.Assert((not math.isnan(linearAccel)) and (not math.isnan(angularAccel)),
+            #  "Linear or angular accelerations are invalid.")
             hydro.ApplyHydrodynamicForces(time, self._flowVelocity)
+
 
     def UpdateFlowVelocity(self, value):
         if self._useGlobalCurrent:

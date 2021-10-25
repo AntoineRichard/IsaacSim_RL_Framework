@@ -15,6 +15,7 @@ from BuoyantObject import BuoyantObject
 import PhysxUtils as utils
 from HydrodynamicModel import HydrodynamicModel
 import HMFossenModels
+import UnderWaterObject
 
 basic={"conversion":{
     "type":"Basic",
@@ -109,6 +110,31 @@ hm_init_usv2 = {
         "offset_nonlin_damping":0.0,
         "scaling_damping":1.0
     }
+}
+
+HeronHydroSettings = {
+    "fluid_density":1028,
+    "link": [{
+        "name": "dummy_link", #RigidBody path
+        "volume":0.13,
+        "box":np.array([1, 1, 1]),
+        "center_of_buoyancy":np.array([0,0,0]),
+        "metacentric_width":0.1,
+        "metacentric_length":0.1,
+        "metacentric_height":0.02,
+        "hydrodynamic_model":{
+            "type": "fossen",
+            "added_mass": np.zeros([6,6]),
+            "offset_added_mass":0.0,
+            "linear_damping":np.eye(6)*np.array([-16.44998712, -15.79776044, -100,-13,-13, -6]),
+            "quadratic_damping":np.eye(6)*np.array([-2.942, -2.7617212, -10, -5, -5, -5]),
+            "linear_damping_forward_speed":np.eye(6)*np.zeros([6]),
+            "offset_linear_damping":0.0,
+            "offset_lin_forward_damping_speed":0.0,
+            "offset_nonlin_damping":0.0,
+            "scaling_damping":1.0
+        }
+    }]
 }
 
 hm_init_rov = {
@@ -396,9 +422,57 @@ class TestHydrodynamicModelFossen(unittest.TestCase):
     
     def test_HydrodynamicModelFossen_ComputeDampingMatrix(self):
         HMF = HMFossenModels.HydroModelMap["fossen"](None, None, None, hm_init_usv)
+        HMF.ComputeDampingMatrix(np.array([0,0,0,0,0,0]))
+        np.testing.assert_array_equal(HMF._D,-hm_init_usv["hydrodynamic_model"]["linear_damping"])
+        HMF.ComputeDampingMatrix(np.array([1,1,1,1,1,1]))
+        np.testing.assert_array_equal(HMF._D,-hm_init_usv["hydrodynamic_model"]["linear_damping"]\
+             - hm_init_usv["hydrodynamic_model"]["linear_damping_forward_speed"]\
+             - hm_init_usv["hydrodynamic_model"]["quadratic_damping"])
     
     def test_HydrodynamicModelFossen_ComputeHydrodynamicForces(self):
         HMF = HMFossenModels.HydroModelMap["fossen"](None, None, None, hm_init_usv)
+        #TODO do a unit test. Computing the output of this function is complicated.
+        # This test makes sure that the function runs. Not that the output is correct.
+        HMF.ComputeHydrodynamicForces(0, np.array([0,0,0]))
+        HMF.ComputeHydrodynamicForces(1.0, np.array([0,0,0]))
+        HMF.ComputeHydrodynamicForces(2.0, np.array([0,0,0]))
+        HMF.ComputeHydrodynamicForces(3.0, np.array([0,0,0]))
+
+class TestUnderWaterObject(unittest.TestCase):
+    def test_UnderWaterObject_init(self):
+        UWO = UnderWaterObject.UnderwaterObject(None,None)
+    
+    def test_UnderWaterObject_load(self):
+        UWO = UnderWaterObject.UnderwaterObject(None,None)
+        UWO.Load(HeronHydroSettings)
+
+    def test_UnderWaterObject_updateFlowVel(self):
+        UWO = UnderWaterObject.UnderwaterObject(None,None)
+        UWO.Load(HeronHydroSettings)
+        UWO.UpdateFlowVelocity(np.array([1,1,1]))
+
+    def test_UnderWaterObject_update(self):
+        UWO = UnderWaterObject.UnderwaterObject(None,None)
+        UWO.Load(HeronHydroSettings)
+        UWO.UpdateFlowVelocity(np.array([1,1,1]))
+        UWO.Update(0)
+        UWO.Update(1.0)
+        UWO.Update(2.0)
+        UWO.Update(3.0)
+
+class TestPoweredUnderWaterObject(unittest.TestCase):
+    def test_PoweredUnderWaterObject_init(self):
+        UWO = UnderWaterObject.UnderwaterObject(None,None)
+
+    def test_PoweredUnderWaterObject_updateFlowVel(self):
+        UWO = UnderWaterObject.UnderwaterObject(None,None)
+    
+    def test_PoweredUnderWaterObject_updateThrustCMD(self):
+        UWO = UnderWaterObject.UnderwaterObject(None,None)
+
+    def test_PoweredUnderWaterObject_update(self):
+        UWO = UnderWaterObject.UnderwaterObject(None,None)
+
 
 if __name__ == '__main__':
     unittest.main()

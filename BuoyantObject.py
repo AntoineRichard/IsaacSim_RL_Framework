@@ -11,7 +11,9 @@ import math
 import PhysxUtils as utils
 
 class BuoyantObject:
-    def __init__(self, stage, prim_path, PhysXIFace):
+    def __init__(self, stage, prim_path, PhysXIFace, physics_path="physicsScene"):
+        # Build APIs
+        self._RigidBodyAPI, self._MassAPI, self._SceneAPI = utils.getUsdPhysicsAPIs(stage, prim_path, physics_path)
         # Volume of fluid displaced by the submerged object
         self._volume = 0.0
         # Scaling factor for the volume
@@ -48,7 +50,7 @@ class BuoyantObject:
         # TMP for calculation of the buoyancy force close to the surface
         self._bounding_box = utils.getBoundingBox(self._stage, self._prim_path)
         self._height = self._bounding_box[2]
-        self._mass = utils.getMass(self._stage, self._prim_path)
+        self._mass = utils.getMass(self._MassAPI)
 
     def SetNeutrallyBuoyant(self):
         self._neutrally_buoyant = True
@@ -111,12 +113,14 @@ class BuoyantObject:
 
     def ApplyBuoyancyForce(self):
         # Prim's pose
-        pose, quat = utils.getPose()
+        pose, quat = utils.getPose(self._PhysXIFace, self._prim_path)
+        rotWR = utils.Quaternion2RotationMatrix(quat)
         # Get the buoyancy force in world coordinates
         buoyancyForce, buoyancyTorque = self.GetBuoyancyForce(pose, quat)
+        cob_world = np.matmul(rotWR, self._center_of_buoyancy) + pose
 
-        if self._is_surface_vessel:
-            utils.AddForceAtRelativePosition(self._PhysXIFace, self._prim_path, pose, buoyancyForce, self.GetCoB())
+        if not self._is_surface_vessel:
+            utils.AddForceAtRelativePosition(self._PhysXIFace, self._prim_path, cob_world, buoyancyForce)
         else:
             utils.AddRelativeForce(self._PhysXIFace, self._prim_path, buoyancyForce)
             utils.AddRelativeTorque(self._PhysXIFace, self._prim_path, buoyancyTorque)
@@ -141,12 +145,14 @@ class BuoyantObject:
 
     def GetFluidDensity(self):
         return self._fluid_density
-
-    def SetCoB(self, centerOfBuoyancy):
-        self.center_of_buoyancy = centerOfBuoyancy
-
+    
+    #@property
     def GetCoB(self):
-        return self.center_of_buoyancy
+        return self._center_of_buoyancy
+
+    #@_center_of_buoyancy.setter
+    def SetCoB(self, centerOfBuoyancy):
+        self._center_of_buoyancy = centerOfBuoyancy
 
     def SetGravity(self, g):
         utils.Assert(g > 0, "Acceleration of gravity must be positive")
@@ -156,7 +162,7 @@ class BuoyantObject:
         return self._g
 
     def IsSubmerged(self):
-      return self._is_submerged
+        return self._is_submerged
 
     def IsNeutrallyBuoyant(self):
-      return self._neutrally_buoyant
+        return self._neutrally_buoyant

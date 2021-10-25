@@ -96,7 +96,7 @@ class ThrusterPlugin():
         # Use the thrust force limits
         self._thrustForce = np.clip(self._thrustForce, self._thrustMin, self._thrustMax)
         self._thrustForceStamp = info
-        force = np.matmul(self._thrusterAxis,self._thrustForce)
+        force = np.matmul(self._thrusterAxis, self._thrustForce)
         utils.AddRelativeForce(force)
 
         #if (this->joint)
@@ -105,5 +105,5 @@ class ThrusterPlugin():
         #  this->joint->SetVelocity(0, dynamicState);
         #}
 
-    def UpdateCommand(value):
+    def UpdateCommand(self, value):
         self._inputCommand = value
