@@ -22,7 +22,7 @@ HeronHydroSettings = {
         "center_of_buoyancy":heron_cob,
         "metacentric_width":0.1,
         "metacentric_length":0.1,
-        "metacentric_height":0.02,
+        "submerged_height":0.05,
         "hydrodynamic_model":{
             "type": "fossen",
             "added_mass": np.zeros([6,6]),

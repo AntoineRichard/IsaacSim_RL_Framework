@@ -11,8 +11,8 @@ import math
 
 
 class HMFossen(HydrodynamicModel):
-    def __init__(self, stage, prim_path, PhysXIFace, settings):
-        super().__init__(stage, prim_path, PhysXIFace, settings)
+    def __init__(self, stage, prim_path, PhysXIFace, DCIFace, settings):
+        super().__init__(stage, prim_path, PhysXIFace, DCIFace, settings)
         self._D = None
         self._Ca = None
         self.buildFossen(settings)
@@ -101,14 +101,18 @@ class HMFossen(HydrodynamicModel):
   
     def ComputeHydrodynamicForces(self, time, _flowVelWorld):
         pose, quat = utils.getPose(self._PhysXIFace, self._prim_path)
+        print(pose, quat)
         rot_mat = utils.Quaternion2RotationMatrix(quat)
-        linVel = utils.getRelativeLinearVel(self._RigidBodyAPI, rot_mat)
-        angVel = utils.getRelativeAngularVel(self._RigidBodyAPI, rot_mat)
+        rot_mat_inv = np.linalg.inv(rot_mat)
+        linVel = utils.getRelativeLinearVel(self._RigidBodyAPI, rot_mat_inv)
+        angVel = utils.getRelativeAngularVel(self._RigidBodyAPI, rot_mat_inv)
+        #print(linVel, angVel)
 
         # Transform the flow velocity to the body frame
         flowVel = np.matmul(rot_mat,_flowVelWorld)
         # Compute the relative velocity
-        velRel = np.hstack([self.ToNED(linVel - flowVel), self.ToNED(angVel)])
+        #velRel = np.hstack([self.ToNED(linVel - flowVel), self.ToNED(angVel)])
+        velRel = np.hstack([linVel - flowVel, angVel])
         # Update added Coriolis matrix
         self.ComputeAddedCoriolisMatrix(velRel)
         # Update damping matrix
@@ -125,19 +129,26 @@ class HMFossen(HydrodynamicModel):
         cor = np.matmul(-self._Ca, velRel)
         # All additional (compared to standard rigid body) Fossen terms combined.
         tau = damping + added + cor
+        #print(tau)
 
         utils.Assert(not math.isnan(np.linalg.norm(tau)), "Hydrodynamic forces vector is nan")
+        print("++++damping++++")
+        print(angVel, tau[-3:])
+        print(linVel, tau[:3])
+        print("+++++++++++++++")
         return tau
 
     def ApplyHydrodynamicForces(self, time, _flowVelWorld):
         tau = self.ComputeHydrodynamicForces(time, _flowVelWorld)
         if not math.isnan(np.linalg.norm(tau)):
             # Convert the forces and moments back to Gazebo's reference frame
-            hydForce = self.FromNED(tau[:3])
-            hydTorque = self.FromNED(tau[-3:])
+            #hydForce = self.FromNED(tau[:3])
+            #hydTorque = self.FromNED(tau[-3:])
+            hydForce = tau[:3]
+            hydTorque = tau[-3:]
             # Forces and torques are also wrt link frame
-            utils.AddRelativeForce(self._PhysXIFace, self._prim_path, hydForce)
-            utils.AddRelativeTorque(self._PhysXIFace, self._prim_path, hydTorque)
+            utils.AddRelativeForce(self._PhysXIFace, self._prim_path, hydForce*100)
+            utils.AddRelativeTorque(self._PhysXIFace, self._prim_path, hydTorque*10)
 
         self.ApplyBuoyancyForce()
 

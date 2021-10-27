@@ -64,7 +64,7 @@ def getPose(PhysXIFace, prim_path):
     transform = PhysXIFace.get_rigidbody_transformation(prim_path)
     # Keeping centimeters to as the forces will be
     # applied in the world frame which is in cm
-    return transform['position'], transform['rotation'] # cm, normalized.
+    return np.array(transform['position']), np.array(transform['rotation']) # cm, normalized.
 
 def getRelativeLinearVel(rigidBodyAPI, rotWR):
     #return np.array([1,1,1])
@@ -101,6 +101,9 @@ def getMass(massAPI):
     #return 10
     return massAPI.GetMassAttr().Get() # kg
 
+def getCenterOfMass(massAPI):
+    #return 10
+    return massAPI.GetCenterOfMassAttr().Get() # kg
     
 def AddForceAtRelativePosition(PhysXIFace, prim_path, force, position):
     #return True
@@ -119,16 +122,30 @@ def AddRelativeForce(PhysXIFace, prim_path, force):
     force_wf = np.matmul(R,force)
     PhysXIFace.apply_force_at_pos(prim_path, force_wf, np.array(transform['position']))
 
+def AddForce(PhysXIFace, prim_path, force):#, CoM):
+    #return True
+    transform = PhysXIFace.get_rigidbody_transformation(prim_path)
+    #R = Quaternion2RotationMatrix(transform['rotation'])
+    #pose = np.matmul(R,CoM) + transform['position']
+    #PhysXIFace.apply_force_at_pos(prim_path, force, pose)
+    PhysXIFace.apply_force_at_pos(prim_path, force, transform['position'])
+
+def AddForceDC(DCIFace, rigid_body_handle, force):#, CoM):
+    #return True
+    transform = DCIFace.apply_body_force(rigid_body_handle, force, [0,0,0])
+
 def AddRelativeTorque(PhysXIFace, prim_path, torque, dist=100):
     #return True
     torque_norm = np.linalg.norm(torque)
+    if torque_norm < 1e-3:
+        return
     torque_normalized = torque/torque_norm
     # Projects torque to world frame
     transform = PhysXIFace.get_rigidbody_transformation(prim_path)
     R = Quaternion2RotationMatrix(transform['rotation'])
     torque_normalized = np.matmul(R,torque_normalized)
     # Make virtual vector
-    idx = np.argmin(torque)
+    idx = np.argmin(np.abs(torque))
     v = np.zeros([3])
     v[idx] = 1.0
     # Get a set two orthogonal vector to the torque

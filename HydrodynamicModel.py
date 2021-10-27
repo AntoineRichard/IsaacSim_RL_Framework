@@ -11,8 +11,8 @@ import numpy as np
 import PhysxUtils as utils
 
 class HydrodynamicModel(BuoyantObject):
-    def __init__(self, stage, prim_path, PhysxIFace, settings):
-        super().__init__(stage, prim_path, PhysxIFace)
+    def __init__(self, stage, prim_path, PhysxIFace, DCIFace, settings):
+        super().__init__(stage, prim_path, PhysxIFace, DCIFace)
         # List of parameters needed
         self._params = []
         # Reynolds number (not used by all models)

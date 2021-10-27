@@ -140,6 +140,7 @@ HeronHydroSettings = {
 hm_init_rov = {
 }
 
+
 class TestThrusterConversionBasic(unittest.TestCase):
     def test_ThrusterConversion_Basic_getParam(self):
         TC = ThrusterConversion.ThrusterConversionMap["Basic"](basic["conversion"])
@@ -151,6 +152,7 @@ class TestThrusterConversionBasic(unittest.TestCase):
         self.assertEqual(TC.convert(0), 0)
         self.assertEqual(TC.convert(50), 50*50*0.0049)
         self.assertEqual(TC.convert(-50), -50*50*0.0049)
+
 
 class TestThrusterConversionBessa(unittest.TestCase):
     def test_ThrusterConversion_Bessa_getParam(self):
@@ -177,6 +179,7 @@ class TestThrusterConversionBessa(unittest.TestCase):
         self.assertEqual(0.001*(cmdl*abs(cmdl)+50), TC.convert(cmdl))
         self.assertEqual(0.002*(cmdr*abs(cmdr)-25), TC.convert(cmdr))
 
+
 class TestThrusterConversionInterpLinear(unittest.TestCase):
     def test_ThrusterConversion_InterpLinear_sanityCheck(self):
         TC = ThrusterConversion.ThrusterConversionMap["LinearInterp"](interp_linear["conversion"])
@@ -197,11 +200,13 @@ class TestThrusterConversionInterpLinear(unittest.TestCase):
             out1 = alpha[i]*out_[i] + (1-alpha[i])*out_[i+1]
             self.assertAlmostEqual(out1, TC.convert(in1), 7)
 
+
 class TestThrusterDynamicsZeroOrder(unittest.TestCase):
     def test_ThrusterDynamics_ZeroOrder_Update(self):
         TD = ThrusterDynamics.ThrusterDynamicsMap["ZeroOrder"](zero_order["dynamics"])
         self.assertEqual(TD.update(10.0,0.0), 10.0)
         self.assertEqual(TD.update(20.0,0.2), 20.0)
+
 
 class TestThrusterDynamicsFirstOrder(unittest.TestCase):
     def test_ThrusterDynamics_FirstOrder_Update(self):
@@ -209,15 +214,18 @@ class TestThrusterDynamicsFirstOrder(unittest.TestCase):
         self.assertEqual(TD.update(0.0,0.0), 0.0)
         self.assertAlmostEqual(TD.update(1.0,0.5),1-0.36787944, 5)
 
+
 class TestThrusterDynamicsYoerger(unittest.TestCase):
     def test_ThrusterDynamics_YoergerDynamics_Update(self):
         TD = ThrusterDynamics.ThrusterDynamicsMap["Yoerger"](yoerger_dyn["dynamics"])
         self.assertEqual(TD.update(0.0,0.0), 0.0)
 
+
 class TestThrusterDynamicsBessa(unittest.TestCase):
     def test_ThrusterDynamics_BessaDynamics_Update(self):
         TD = ThrusterDynamics.ThrusterDynamicsMap["Bessa"](bessa_dyn["dynamics"])
         self.assertEqual(TD.update(0.0,0.0), 0.0)
+
 
 class TestUtilsQuat2Rot(unittest.TestCase):
     def test_Utils_Quaternion2RotationMatrix(self):
@@ -231,6 +239,7 @@ class TestUtilsQuat2Rot(unittest.TestCase):
         self.assertEqual(r,0)
         self.assertEqual(p,0)
         self.assertEqual(y,0)
+
 
 class TestBoyantObject(unittest.TestCase):
     def test_BuoyantObject_init(self):
@@ -344,6 +353,7 @@ class TestHydrodynamicModel(unittest.TestCase):
         HM.ComputeAcc(np.array([3,3,3,3,3,3]), 2, 0.3)
         np.testing.assert_array_equal(HM._filtered_acc, np.ones(6)*0.3*0.7 + np.ones(6)*0.3)
 
+
 class TestHydrodynamicModelFossen(unittest.TestCase):
     def test_HydrodynamicModelFossen_init(self):
         HMF = HMFossenModels.HydroModelMap["fossen"](None, None, None, hm_init_usv)
@@ -438,6 +448,7 @@ class TestHydrodynamicModelFossen(unittest.TestCase):
         HMF.ComputeHydrodynamicForces(2.0, np.array([0,0,0]))
         HMF.ComputeHydrodynamicForces(3.0, np.array([0,0,0]))
 
+
 class TestUnderWaterObject(unittest.TestCase):
     def test_UnderWaterObject_init(self):
         UWO = UnderWaterObject.UnderwaterObject(None,None)
@@ -459,6 +470,7 @@ class TestUnderWaterObject(unittest.TestCase):
         UWO.Update(1.0)
         UWO.Update(2.0)
         UWO.Update(3.0)
+
 
 class TestPoweredUnderWaterObject(unittest.TestCase):
     def test_PoweredUnderWaterObject_init(self):

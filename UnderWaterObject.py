@@ -10,11 +10,12 @@ from HMFossenModels import *
 import PhysxUtils as utils
 
 class UnderwaterObject:
-    def __init__(self, stage, PhysXIFace):        
+    def __init__(self, stage, PhysXIFace, DCIFace):        
         # Pairs of links & corresponding hydrodynamic models
         self._models = {}
         self._stage = stage
         self._PhysXIFace = PhysXIFace
+        self._DCIFace = DCIFace
         # Flow velocity vector read from topic
         self._flowVelocity = np.zeros([3])
         # Name of vehicle's base_link
@@ -51,7 +52,7 @@ class UnderwaterObject:
                     continue
 
                 # Creating a new hydrodynamic model for this link
-                hydro = HydroModelMap[linkSettings["hydrodynamic_model"]["type"]](self._stage, linkName, self._PhysXIFace, linkSettings)
+                hydro = HydroModelMap[linkSettings["hydrodynamic_model"]["type"]](self._stage, linkName, self._PhysXIFace, self._DCIFace, linkSettings)
                 gAcc = utils.getGravity(hydro._SceneAPI)
                 hydro.SetFluidDensity(fluidDensity)
                 hydro.SetGravity(gAcc)

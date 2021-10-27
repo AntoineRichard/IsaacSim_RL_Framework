@@ -11,7 +11,7 @@ import math
 import PhysxUtils as utils
 
 class BuoyantObject:
-    def __init__(self, stage, prim_path, PhysXIFace, physics_path="/physicsScene"):
+    def __init__(self, stage, prim_path, PhysXIFace, DCIFace, physics_path="/physicsScene"):
         # Build APIs
         self._RigidBodyAPI, self._MassAPI, self._SceneAPI = utils.getUsdPhysicsAPIs(stage, prim_path, physics_path)
         # Volume of fluid displaced by the submerged object
@@ -32,6 +32,8 @@ class BuoyantObject:
         self._prim_path = prim_path
         self._stage = stage
         self._PhysXIFace = PhysXIFace
+        self._DCIFace = DCIFace
+        self._rigid_body_handle = self._DCIFace.get_rigid_body(self._prim_path)
         # If true, the restoring force will be equal to the gravitational force
         self._neutrally_buoyant = False
         # Metacentric width of the robot, used only for surface vessels and floating objects
@@ -60,7 +62,7 @@ class BuoyantObject:
         utils.Print(utils.getName(self._prim_path)+" is neutrally buoyant")
 
     def GetBuoyancyForce(self, pose, quat):
-        z = pose[2]
+        z = pose[2] * 0.01 # cast to meters
         roll,pitch,yaw = utils.Q2RPY(quat)
         volume = 0.0 
         buoyancyForce = np.array([0, 0, 0])
@@ -86,11 +88,12 @@ class BuoyantObject:
             The original code behaved weirdly during unit testing.
             The waterLevelPlaneArea is now computed using the first expression.
             """
-            if self._water_level_plane_area <= 0:
-                self._water_level_plane_area = self._bounding_box[0] * self._bounding_box[1]
-                utils.Print(utils.getName(self._stage, self._prim_path)+" :: waterLevelPlaneArea = "+str(self._water_level_plane_area))
-            #self._waterLevelPlaneArea = self._mass / (self._fluidDensity * self._submergedHeight)
-     
+            #if self._water_level_plane_area <= 0:
+            #    self._water_level_plane_area = self._bounding_box[0] * self._bounding_box[1]
+            #    utils.Print(utils.getName(self._stage, self._prim_path)+" :: waterLevelPlaneArea = "+str(self._water_level_plane_area))
+            self._water_level_plane_area = self._mass / (self._fluid_density * self._submerged_height)
+            #print(self._mass, self._fluid_density, self._submerged_height)
+            #print(self._water_level_plane_area)
             if z > (self._height/2.0):
                 # Vessel is completely out of the water
                 self._is_submerged = False
@@ -101,13 +104,20 @@ class BuoyantObject:
             else:
                 self._is_submerged = False
                 curSubmergedHeight = self._height/2.0 - z
-            print(curSubmergedHeight)
+            #print(curSubmergedHeight)
+            #print(self._bounding_box)
             volume = curSubmergedHeight * self._water_level_plane_area
+            #print(volume)
+            #print()
             buoyancyForce = np.array([0, 0, volume * self._fluid_density * self._g])
             buoyancyTorque = np.array([
                 -1 * self._metacentric_width * math.sin(roll) * buoyancyForce[2],
                 -1 * self._metacentric_length * math.sin(pitch) * buoyancyForce[2],
                 0])
+        print(buoyancyTorque, buoyancyForce)
+        print(curSubmergedHeight, self._submerged_height)
+        #print(self._g, volume, self._fluid_density, self._mass)
+        print(self._g*self._fluid_density*volume, self._g*self._mass)
      
         return buoyancyForce, buoyancyTorque
 
@@ -122,7 +132,9 @@ class BuoyantObject:
         if not self._is_surface_vessel:
             utils.AddForceAtRelativePosition(self._PhysXIFace, self._prim_path, cob_world, buoyancyForce)
         else:
-            utils.AddRelativeForce(self._PhysXIFace, self._prim_path, buoyancyForce)
+            #utils.AddForce(self._PhysXIFace, self._prim_path, buoyancyForce)
+            self._rigid_body_handle = self._DCIFace.get_rigid_body(self._prim_path)
+            utils.AddForceDC(self._DCIFace, self._rigid_body_handle, buoyancyForce)
             utils.AddRelativeTorque(self._PhysXIFace, self._prim_path, buoyancyTorque)
 
     def SetBoundingBox(self, bBox):
