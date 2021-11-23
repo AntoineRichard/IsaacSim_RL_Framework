@@ -23,7 +23,7 @@ class BuoyantObject:
         # Fluid density
         self._fluid_density = 1028.0
         # Acceleration of gravity
-        self._g = 981.0
+        self._g = 981
         # Center of buoyancy in the body frame
         self._center_of_buoyancy = np.zeros(3)
         # Is submerged flag
@@ -114,10 +114,10 @@ class BuoyantObject:
                 -1 * self._metacentric_width * math.sin(roll) * buoyancyForce[2],
                 -1 * self._metacentric_length * math.sin(pitch) * buoyancyForce[2],
                 0])
-        print(buoyancyTorque, buoyancyForce)
-        print(curSubmergedHeight, self._submerged_height)
+        #print(buoyancyTorque, buoyancyForce)
+        #print(curSubmergedHeight, self._submerged_height)
         #print(self._g, volume, self._fluid_density, self._mass)
-        print(self._g*self._fluid_density*volume, self._g*self._mass)
+        #print(self._g*self._fluid_density*volume, self._g*self._mass)
      
         return buoyancyForce, buoyancyTorque
 
@@ -133,6 +133,7 @@ class BuoyantObject:
             utils.AddForceAtRelativePosition(self._PhysXIFace, self._prim_path, cob_world, buoyancyForce)
         else:
             #utils.AddForce(self._PhysXIFace, self._prim_path, buoyancyForce)
+            #print(buoyancyForce)
             self._rigid_body_handle = self._DCIFace.get_rigid_body(self._prim_path)
             utils.AddForceDC(self._DCIFace, self._rigid_body_handle, buoyancyForce)
             utils.AddRelativeTorque(self._PhysXIFace, self._prim_path, buoyancyTorque)
