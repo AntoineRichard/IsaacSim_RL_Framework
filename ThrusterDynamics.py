@@ -12,15 +12,15 @@ import math
 
 class Dynamics:
     def __init__(self):
-        self._prevTime = None
+        #self._prevTime = None
         self._state = None
         self.Reset()
 
-    def update(self, cmd, t):
+    def update(self, cmd, dt):
       raise NotImplementedError()
 
     def Reset(self):
-        self._prevTime = -10.
+        #self._prevTime = -10.
         self._state = 0.
       
 
@@ -28,7 +28,7 @@ class DynamicsZeroOrder(Dynamics):
     def __init__(self, settings):
         super().__init__()
     
-    def update(self, cmd, t):
+    def update(self, cmd, dt):
         return cmd
 
 
@@ -40,17 +40,17 @@ class DynamicsFirstOrder(Dynamics):
             exit(1)
         self.tau = settings["timeConstant"]
 
-    def update(self, cmd, t):
-        if self._prevTime < 0:
-            self._prevTime = t
-            return self._state
+    def update(self, cmd, dt):
+        #if self._prevTime < 0:
+        #    self._prevTime = t
+        #    return self._state
 
-        dt = t - self._prevTime
+        #dt = t - self._prevTime
 
         alpha = math.exp(-dt/self.tau)
         self._state = self._state*alpha + (1.0 - alpha)*cmd
 
-        self._prevTime = t
+        #self._prevTime = t
 
         return self._state
 
@@ -67,14 +67,16 @@ class ThrusterDynamicsYoerger(Dynamics):
             raise ValueError()
         self._beta = settings["beta"]
 
-    def update(self, cmd, t):
-        if self._prevTime < 0:
-            self._prevTime = t
-            return self._state
+    def update(self, cmd, dt):
+        #if self._prevTime < 0:
+        #    self._prevTime = t
+        #    return self._state
 
-        dt = t - self._prevTime
+        #t = t - self._prevTime
 
         self._state += dt*(self._beta*cmd - self._alpha*self._state*abs(self._state))
+        
+        #self._prevTime = t
 
         return self._state
 
@@ -103,15 +105,17 @@ class ThrusterDynamicsBessa(Dynamics):
             raise ValueError()
         self._Rm = settings["Rm"]
     
-    def update(self, cmd, t):
-        if self._prevTime < 0:
-            self._prevTime = t
-            return self._state
+    def update(self, cmd, dt):
+        #if self._prevTime < 0:
+        #    self._prevTime = t
+        #    return self._state
 
-        dt = t - self._prevTime
+        #dt = t - self._prevTime
         
         self._state += dt*(cmd*self._Kt/self._Rm - self._Kv1*self._state
                       - self._Kv2*self._state*math.abs(self._state))/self._Jmsp
+        
+        #self._prevTime = t
 
         return self._state
 

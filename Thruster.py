@@ -13,7 +13,7 @@ import ThrusterConversion
 import PhysxUtils as utils
 
 class ThrusterPlugin():
-    def __init__(self):
+    def __init__(self, stage, PhysXIFace, DCIFace):
         self._inputCommand = 0
         self._clampMin = -1e16
         self._clampMax = 1e16
@@ -24,17 +24,20 @@ class ThrusterPlugin():
         self._thrustEfficiency = 1.0
         self._propellerEfficiency = 1.0
         self._thrusterID = -1
+        self.stage = stage
+        self._PhysXIFace = PhysXIFace
+        self._DCIFace = DCIFace
 
-    def load(self, settings):
+    def Load(self, settings):
         # Link
         utils.Assert("linkName" in settings, "Could not find linkName.")
-        self._thrusterLink = utils.GetLink(settings["linkName"])
+        self._thrusterLink = settings["linkName"]
         # Thruster dynamics
         utils.Assert("dynamics" in settings.keys(), "Could not find dynamics.")
-        self._thrusterDynamics = ThrusterDynamics.ThrusterDynamicsMap[settings["dynamics"]](settings["dynamics"])
+        self._thrusterDynamics = ThrusterDynamics.ThrusterDynamicsMap[settings["dynamics"]["type"]](settings["dynamics"])
         # Thrust conversion function
         utils.Assert("conversion" in settings.keys(), "Could not find conversion.")
-        self._conversionFunction = ThrusterConversion.ThrusterConversionMap[settings["conversion"]](settings["conversion"])
+        self._conversionFunction = ThrusterConversion.ThrusterConversionMap[settings["conversion"]["type"]](settings["conversion"])
         # Optional paramters:
         # Rotor joint, used for visualization if available.
         #if (_sdf->HasElement("jointName"))
@@ -43,7 +46,7 @@ class ThrusterPlugin():
         if "clampMin" in settings.keys():
             self._clampMin = settings["clampMin"]
         if "clampMax" in settings.keys():
-            self._clampMax = settings["clampMxa"]
+            self._clampMax = settings["clampMax"]
         if self._clampMin >= self._clampMax:
             utils.print("clampMax must be greater than clampMin, returning to default values...")
             self._clampMin = -1e16
@@ -72,12 +75,14 @@ class ThrusterPlugin():
                 utils.print("Invalid propeller dynamics efficiency factor, setting it to 100%")
                 self.propellerEfficiency = 1.0
 
-        self._thrusterAxis = utils.getOrientation(self._thrusterLink)
+        if "jointName" in settings:
+            self._thrusterJoint = settings["jointName"]
+            self._thrusterAxis = utils.getJointAxis(self.stage, self._thrusterJoint)
 
     def Reset(self):
         self._thrusterDynamics.Reset()
 
-    def Update(self, info):
+    def Update(self, dt):
         utils.Assert(not math.isnan(self._inputCommand), "nan in this->inputCommand")
         #double dynamicsInput;
         #double dynamicState;
@@ -88,22 +93,25 @@ class ThrusterPlugin():
             # In case the thruster is turned off in runtime, the dynamic state
             # will converge to zero
             dynamicsInput = 0.0
-        dynamicState = self._propellerEfficiency * self._thrusterDynamics.update(dynamicsInput, info)
+        dynamicState = self._propellerEfficiency * self._thrusterDynamics.update(dynamicsInput, dt)
         utils.Assert(not math.isnan(dynamicState), "Invalid dynamic state")
         # Multiply the output force magnitude with the efficiency
         self._thrustForce = self._thrustEfficiency * self._conversionFunction.convert(dynamicState)
         utils.Assert(not math.isnan(self._thrustForce), "Invalid thrust force")
         # Use the thrust force limits
         self._thrustForce = np.clip(self._thrustForce, self._thrustMin, self._thrustMax)
-        self._thrustForceStamp = info
-        force = np.matmul(self._thrusterAxis, self._thrustForce)
-        utils.AddRelativeForce(force)
-
-        #if (this->joint)
-        #{
-        #  // Let joint rotate with correct angular velocity.
-        #  this->joint->SetVelocity(0, dynamicState);
-        #}
+        force = self._thrusterAxis * self._thrustForce
+        #print('++++'+self._thrusterLink+'++++')
+        #print(self._thrustForce)
+        #print(self._thrusterAxis)
+        #print(force)
+        utils.AddRelativeForce(self._PhysXIFace, self._thrusterLink, force*100)
+        #print('+++++++++++++++')
+        #self.dof_ptr = self._DCIFace.get_articulation(self._thrusterJoint)
+        #self._DCIFace.set_dof_velocity_target(self.dof_ptr, dynamicState*3.14*2)
+        #if self._thrusterJoint:
+        # Let joint rotate with correct angular velocity.
+        #this->joint->SetVelocity(0, dynamicState);
 
     def UpdateCommand(self, value):
         self._inputCommand = value
