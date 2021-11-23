@@ -6,7 +6,6 @@
 """
 
 import numpy as np
-from numpy.core.defchararray import array
 
 heron_length=1.35
 heron_width=1.0
@@ -22,7 +21,7 @@ HeronHydroSettings = {
         "center_of_buoyancy":heron_cob,
         "metacentric_width":0.1,
         "metacentric_length":0.1,
-        "submerged_height":0.05,
+        "submerged_height":0.02,
         "hydrodynamic_model":{
             "type": "fossen",
             "added_mass": np.zeros([6,6]),
@@ -37,11 +36,10 @@ HeronHydroSettings = {
         }
     }]
 }
-"""
-HeronThrusters = {[
+HeronThrusters = [
     {
-        "linkName":"thruster_0", #RigidBody path
-        "jointName":"base_link/thruster_0_joint", #Joint path
+        "linkName":"/heron/thruster_0", #RigidBody path
+        "jointName":"/heron/base_link/thruster_0_joint", #Joint path
         "thruster_id":"thruster_0",
         "gain":1,
         "clampMax":100,
@@ -60,8 +58,8 @@ HeronThrusters = {[
             "outputValues": np.array([-19.88,-16.52,-12.6,-5.6,-1.4,0.0,2.24,9.52,21.28,28.0,33.6])
         }
     },{
-        "linkName":"thruster_1", #RigidBody path
-        "jointName":"base_link/thruster_1_joint", #Joint path
+        "linkName":"/heron/thruster_1", #RigidBody path
+        "jointName":"/heron/base_link/thruster_1_joint", #Joint path
         "thruster_id":"thruster_1",
         "gain":1,
         "clampMax":100,
@@ -79,6 +77,5 @@ HeronThrusters = {[
             "inputValues": np.array([-1.0,-0.8,-0.6,-0.4,-0.2,0,0.2,0.4,0.6,0.8,1.0]),
             "outputValues": np.array([-19.88,-16.52,-12.6,-5.6,-1.4,0.0,2.24,9.52,21.28,28.0,33.6])
         }
-    }]
-}
-"""
+    }
+]
