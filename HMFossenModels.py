@@ -101,12 +101,15 @@ class HMFossen(HydrodynamicModel):
   
     def ComputeHydrodynamicForces(self, time, _flowVelWorld):
         pose, quat = utils.getPose(self._PhysXIFace, self._prim_path)
-        print(pose, quat)
+        #print(pose, quat)
         rot_mat = utils.Quaternion2RotationMatrix(quat)
         rot_mat_inv = np.linalg.inv(rot_mat)
         linVel = utils.getRelativeLinearVel(self._RigidBodyAPI, rot_mat_inv)
         angVel = utils.getRelativeAngularVel(self._RigidBodyAPI, rot_mat_inv)
-        #print(linVel, angVel)
+        #print('++++vel++++')
+        #print(linVel)
+        #print(angVel)
+        #print('+++++++++++')
 
         # Transform the flow velocity to the body frame
         flowVel = np.matmul(rot_mat,_flowVelWorld)
@@ -119,7 +122,7 @@ class HMFossen(HydrodynamicModel):
         self.ComputeDampingMatrix(velRel)
         # Filter acceleration (see issue explanation above)
         self.ComputeAcc(velRel, time, 0.3)
-        # We can now compute the additional forces/torques due to thisdynamic
+        # We can now compute the additional forces/torques due to this dynamic
         # effects based on Eq. 8.136 on p.222 of Fossen: Handbook of Marine Craft ...
         # Damping forces and torques
         damping =  np.matmul(-self._D, velRel)
@@ -132,10 +135,6 @@ class HMFossen(HydrodynamicModel):
         #print(tau)
 
         utils.Assert(not math.isnan(np.linalg.norm(tau)), "Hydrodynamic forces vector is nan")
-        print("++++damping++++")
-        print(angVel, tau[-3:])
-        print(linVel, tau[:3])
-        print("+++++++++++++++")
         return tau
 
     def ApplyHydrodynamicForces(self, time, _flowVelWorld):
@@ -148,7 +147,7 @@ class HMFossen(HydrodynamicModel):
             hydTorque = tau[-3:]
             # Forces and torques are also wrt link frame
             utils.AddRelativeForce(self._PhysXIFace, self._prim_path, hydForce*100)
-            utils.AddRelativeTorque(self._PhysXIFace, self._prim_path, hydTorque*10)
+            utils.AddRelativeTorque(self._PhysXIFace, self._prim_path, hydTorque*100)
 
         self.ApplyBuoyancyForce()
 
@@ -184,11 +183,17 @@ class HMFossen(HydrodynamicModel):
         // and quadratic damping terms and group these terms in a
         // matrix Drb
         """
-        self._D = -1 * (self._linear_damping+ self._offset_linear_damping * np.eye(6))\
+        #print("++++damping++++")
+        #print(vel[-3:])
+        lin_damp =  -1 * (self._linear_damping+ self._offset_linear_damping * np.eye(6))\
             - vel[0] * (self._linear_damping_forward_speed + self._offset_lin_forward_speed_damping * np.eye(6))
         # Nonlinear damping matrix is considered as a diagonal matrix
-        self._D += -1 * (self._quadratic_damping + self._offset_nonlin_damping * np.eye(6))* np.abs(vel)
-        self._D *= self._scaling_damping
+        quad_damp = -1 * (self._quadratic_damping + self._offset_nonlin_damping * np.eye(6))* np.abs(vel)
+        self._D = (lin_damp + quad_damp)*self._scaling_damping
+        #print(np.matmul(-lin_damp, vel)[:-3])
+        #print(np.matmul(-lin_damp, vel)[-3:])
+        #print(np.matmul(-quad_damp, vel)[-3:])
+        #print("+++++++++++++++")
 
     def GetAddedMass(self):
         return self._scaling_added_mass * (self._added_mass + self._offset_added_mass * np.eye(6))
