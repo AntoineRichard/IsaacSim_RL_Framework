@@ -53,11 +53,18 @@ def getRigidBodyAtPath(stage, prim_path):
     except:
         return False
 
-#def getRelativeLinearAccel(link):
-#    raise NotImplementedError()
-
-#def getRelativeAngularAccel(link):
-#    raise NotImplementedError()
+def getJointAxis(stage, joint_path):
+    joint = UsdPhysics.RevoluteJoint.Get(stage, joint_path)
+    axis = joint.GetAxisAttr().Get()
+    if axis == 'X':
+        ax = np.array([1,0,0])
+    elif axis == 'Y':
+        ax = np.array([0,1,0])
+    elif axis == 'Z':
+        ax = np.array([0,0,1])
+    else:
+        raise Exception("Failed to fetch thruster axis. Specified axis does not exist.")
+    return ax
 
 def getPose(PhysXIFace, prim_path):
     #return np.array([1,1,1]), np.array([0,0,0,1])
@@ -120,6 +127,7 @@ def AddRelativeForce(PhysXIFace, prim_path, force):
     transform = PhysXIFace.get_rigidbody_transformation(prim_path)
     R = Quaternion2RotationMatrix(transform['rotation'])
     force_wf = np.matmul(R,force)
+    #print(force_wf)
     PhysXIFace.apply_force_at_pos(prim_path, force_wf, np.array(transform['position']))
 
 def AddForce(PhysXIFace, prim_path, force):#, CoM):
