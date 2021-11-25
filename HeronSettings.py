@@ -15,7 +15,7 @@ heron_cob = np.array([0,0,0])
 HeronHydroSettings = {
     "fluid_density":1028,
     "link": [{
-        "name": "/heron/dummy_link", #RigidBody path
+        "name": "/heron/base_link", #RigidBody path
         "volume":0.13,
         "box":np.array([heron_length, heron_width, heron_height]),
         "center_of_buoyancy":heron_cob,

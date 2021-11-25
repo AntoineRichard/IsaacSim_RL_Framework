@@ -62,10 +62,6 @@ class UnderwaterObject:
 
     def Update(self, time):
         for hydro in self._models.values():
-            #linearAccel = np.linalg.norm(utils.getRelativeLinearAccel(link))
-            #angularAccel = np.linalg.norm(utils.getRelativeAngularAccel(link))
-            #utils.Assert((not math.isnan(linearAccel)) and (not math.isnan(angularAccel)),
-            #  "Linear or angular accelerations are invalid.")
             hydro.ApplyHydrodynamicForces(time, self._flowVelocity)
 
 

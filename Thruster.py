@@ -28,20 +28,18 @@ class ThrusterPlugin():
         self._PhysXIFace = PhysXIFace
         self._DCIFace = DCIFace
 
+
     def Load(self, settings):
         # Link
         utils.Assert("linkName" in settings, "Could not find linkName.")
         self._thrusterLink = settings["linkName"]
+        self._rigid_body_handle = self._DCIFace.get_rigid_body(self._thrusterLink)
         # Thruster dynamics
         utils.Assert("dynamics" in settings.keys(), "Could not find dynamics.")
         self._thrusterDynamics = ThrusterDynamics.ThrusterDynamicsMap[settings["dynamics"]["type"]](settings["dynamics"])
         # Thrust conversion function
         utils.Assert("conversion" in settings.keys(), "Could not find conversion.")
         self._conversionFunction = ThrusterConversion.ThrusterConversionMap[settings["conversion"]["type"]](settings["conversion"])
-        # Optional paramters:
-        # Rotor joint, used for visualization if available.
-        #if (_sdf->HasElement("jointName"))
-        #  this->joint = _model->GetJoint(_sdf->Get<std::string>("jointName"));
         # Clamping interval
         if "clampMin" in settings.keys():
             self._clampMin = settings["clampMin"]
@@ -84,8 +82,6 @@ class ThrusterPlugin():
 
     def Update(self, dt):
         utils.Assert(not math.isnan(self._inputCommand), "nan in this->inputCommand")
-        #double dynamicsInput;
-        #double dynamicState;
         # Test if the thruster has been turned off
         if self._isOn:
             dynamicsInput = np.clip(self._inputCommand, self._clampMin, self._clampMax)*self._gain
@@ -101,12 +97,8 @@ class ThrusterPlugin():
         # Use the thrust force limits
         self._thrustForce = np.clip(self._thrustForce, self._thrustMin, self._thrustMax)
         force = self._thrusterAxis * self._thrustForce
-        #print('++++'+self._thrusterLink+'++++')
-        #print(self._thrustForce)
-        #print(self._thrusterAxis)
-        #print(force)
-        utils.AddRelativeForce(self._PhysXIFace, self._thrusterLink, force*100)
-        #print('+++++++++++++++')
+        self._rigid_body_handle = self._DCIFace.get_rigid_body(self._thrusterLink)
+        utils.AddRelativeForceDC(self._DCIFace, self._rigid_body_handle, force*100)
         #self.dof_ptr = self._DCIFace.get_articulation(self._thrusterJoint)
         #self._DCIFace.set_dof_velocity_target(self.dof_ptr, dynamicState*3.14*2)
         #if self._thrusterJoint:

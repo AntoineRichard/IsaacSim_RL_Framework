@@ -121,49 +121,12 @@ def AddForceAtRelativePosition(PhysXIFace, prim_path, force, position):
     position_wf = np.matmul(R,position) + np.array(transform['position'])
     PhysXIFace.apply_force_at_pos(prim_path, force_wf, position_wf)
 
-def AddRelativeForce(PhysXIFace, prim_path, force):
-    #return True
-    # Projects force to world frame
-    transform = PhysXIFace.get_rigidbody_transformation(prim_path)
-    R = Quaternion2RotationMatrix(transform['rotation'])
-    force_wf = np.matmul(R,force)
-    #print(force_wf)
-    PhysXIFace.apply_force_at_pos(prim_path, force_wf, np.array(transform['position']))
+def AddRelativeForceDC(DCIFace, rigid_body_handle, force):
+    DCIFace.apply_body_force(rigid_body_handle, force, [0,0,0], False)
 
-def AddForce(PhysXIFace, prim_path, force):#, CoM):
-    #return True
+def AddForceDC(DCIFace, rigid_body_handle, PhysXIFace, prim_path, force):#, CoM):
     transform = PhysXIFace.get_rigidbody_transformation(prim_path)
-    #R = Quaternion2RotationMatrix(transform['rotation'])
-    #pose = np.matmul(R,CoM) + transform['position']
-    #PhysXIFace.apply_force_at_pos(prim_path, force, pose)
-    PhysXIFace.apply_force_at_pos(prim_path, force, transform['position'])
+    DCIFace.apply_body_force(rigid_body_handle, force, transform['position'], True)
 
-def AddForceDC(DCIFace, rigid_body_handle, force):#, CoM):
-    #return True
-    transform = DCIFace.apply_body_force(rigid_body_handle, force, [0,0,0])
-
-def AddRelativeTorque(PhysXIFace, prim_path, torque, dist=100):
-    #return True
-    torque_norm = np.linalg.norm(torque)
-    if torque_norm < 1e-3:
-        return
-    torque_normalized = torque/torque_norm
-    # Projects torque to world frame
-    transform = PhysXIFace.get_rigidbody_transformation(prim_path)
-    R = Quaternion2RotationMatrix(transform['rotation'])
-    torque_normalized = np.matmul(R,torque_normalized)
-    # Make virtual vector
-    idx = np.argmin(np.abs(torque))
-    v = np.zeros([3])
-    v[idx] = 1.0
-    # Get a set two orthogonal vector to the torque
-    w = np.cross(torque_normalized, v)
-    w21 = np.cross(torque_normalized, w)
-    w22 = -w21
-    f1_dir = np.cross(torque_normalized,w21)
-    f2_dir = - f1_dir
-    p1 = w21 * dist
-    p2 = w22 * dist
-    # Apply forces at the position of the object
-    PhysXIFace.apply_force_at_pos(prim_path, f1_dir*torque_norm/2, p1 + np.array(transform['position']))
-    PhysXIFace.apply_force_at_pos(prim_path, f2_dir*torque_norm/2, p2 + np.array(transform['position']))
+def AddRelativeTorqueDC(DCIFace, rigid_body_handle, torque, dist=100):
+    DCIFace.apply_body_torque(rigid_body_handle, torque*dist, False)

@@ -132,11 +132,9 @@ class BuoyantObject:
         if not self._is_surface_vessel:
             utils.AddForceAtRelativePosition(self._PhysXIFace, self._prim_path, cob_world, buoyancyForce)
         else:
-            #utils.AddForce(self._PhysXIFace, self._prim_path, buoyancyForce)
-            #print(buoyancyForce)
             self._rigid_body_handle = self._DCIFace.get_rigid_body(self._prim_path)
-            utils.AddForceDC(self._DCIFace, self._rigid_body_handle, buoyancyForce)
-            utils.AddRelativeTorque(self._PhysXIFace, self._prim_path, buoyancyTorque)
+            utils.AddForceDC(self._DCIFace, self._rigid_body_handle, self._PhysXIFace, self._prim_path, buoyancyForce)
+            utils.AddRelativeTorqueDC(self._DCIFace, self._rigid_body_handle, buoyancyTorque*100)
 
     def SetBoundingBox(self, bBox):
         self._bounding_box = bBox
