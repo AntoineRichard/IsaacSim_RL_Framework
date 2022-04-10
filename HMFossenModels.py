@@ -100,15 +100,15 @@ class HMFossen(HydrodynamicModel):
             self._params.append("volume")
   
     def ComputeHydrodynamicForces(self, time, _flowVelWorld):
-        pose, quat = utils.getPose(self._PhysXIFace, self._prim_path)
-        rot_mat = utils.Quaternion2RotationMatrix(quat)
+        self.pose, self.quat = utils.getPose(self._PhysXIFace, self._prim_path)
+        rot_mat = utils.Quaternion2RotationMatrix(self.quat)
         rot_mat_inv = np.linalg.inv(rot_mat)
-        linVel = utils.getRelativeLinearVel(self._RigidBodyAPI, rot_mat_inv)
-        angVel = utils.getRelativeAngularVel(self._RigidBodyAPI, rot_mat_inv)
+        self.linVel = utils.getRelativeLinearVel(self._RigidBodyAPI, rot_mat_inv)
+        self.angVel = utils.getRelativeAngularVel(self._RigidBodyAPI, rot_mat_inv)
         # Transform the flow velocity to the body frame
         flowVel = np.matmul(rot_mat,_flowVelWorld)
         # Compute the relative velocity
-        velRel = np.hstack([linVel - flowVel, angVel])
+        velRel = np.hstack([self.linVel - flowVel, self.angVel])
         # Update added Coriolis matrix
         self.ComputeAddedCoriolisMatrix(velRel)
         # Update damping matrix
@@ -140,6 +140,18 @@ class HMFossen(HydrodynamicModel):
             utils.AddRelativeTorqueDC(self._DCIFace, self._rigid_body_handle, hydTorque*100)
 
         self.ApplyBuoyancyForce()
+
+    def getLinearVel(self):
+        return utils.getLinearVel()
+
+    def getAngularVel(self):
+        return utils.getAngularVel()
+
+    def getPose(self):
+        return self.pose/100.0
+
+    def getQuat(self):
+        return self.quat
 
     @staticmethod
     def CrossProductOperator(A):

@@ -9,7 +9,7 @@ from HydrodynamicModel import *
 from HMFossenModels import *
 import PhysxUtils as utils
 
-class UnderwaterObject:
+class UnderWaterObject:
     def __init__(self, stage, PhysXIFace, DCIFace):        
         # Pairs of links & corresponding hydrodynamic models
         self._models = {}

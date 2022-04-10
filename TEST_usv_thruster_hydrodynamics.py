@@ -2,11 +2,12 @@ import os
 import omni
 import carb
 from pxr import Gf, UsdGeom
+import numpy as np
 from omni.isaac.python_app import OmniKitHelper
+from omni.isaac.kit import SimulationApp
 import time
 import sys
 
-#import UnderWaterObject
 CONFIG = {
     "experience": f'{os.environ["EXP_PATH"]}/omni.isaac.sim.python.kit',
     "renderer": "RayTracedLighting",
@@ -14,11 +15,11 @@ CONFIG = {
 }
 
 if __name__ == "__main__":
-
-    omniverse_kit = OmniKitHelper(CONFIG)
+    simulation_app = SimulationApp(CONFIG)
+    #omniverse_kit = OmniKitHelper(CONFIG)
     ext_manager = omni.kit.app.get_app().get_extension_manager()
-    omniverse_kit.set_setting("/app/window/drawMouse", True)
-    omniverse_kit.set_setting("/app/livestream/proto", "ws")
+    simulation_app.set_setting("/app/window/drawMouse", True)
+    simulation_app.set_setting("/app/livestream/proto", "ws")
     ext_manager.set_extension_enabled_immediate("omni.physx.bundle", True)
     ext_manager.set_extension_enabled_immediate("omni.syntheticdata", True)
     ext_manager.set_extension_enabled_immediate("omni.kit.livestream.core", True)
@@ -27,14 +28,19 @@ if __name__ == "__main__":
     ext_manager.set_extension_enabled_immediate("omni.kit.property.bundle", True)
     import utils
     from omni.physx import get_physx_interface, get_physx_authoring_interface
+    #from omni.isaac.core.utils. import create_background
     from omni.isaac.dynamic_control import _dynamic_control
+    from omni.isaac.core import SimulationContext
 
-    from python_samples.Buoyancy.HeronSettings import HeronHydroSettings, HeronThrusters
-    from python_samples.Buoyancy.UnderWaterObject import UnderwaterObject
-    from python_samples.Buoyancy.Thruster import ThrusterPlugin
+
+    from HeronSettings import HeronHydroSettings, HeronThrusters
+    from UnderWaterObject import UnderwaterObject
+    from Thruster import ThrusterPlugin
 
 
     nucleus_server = utils.get_nucleus_server()
+    simulation_context = SimulationContext()
+
     asset_path = nucleus_server + "/LakeSimulation/heron3.usd"
     scene_path = nucleus_server + "/LakeSimulation/gen1_final.usd"
 
@@ -59,26 +65,30 @@ if __name__ == "__main__":
     #position = Gf.Vec3d(11210, 46000, 35)
     position = Gf.Vec3d(0, 0, 15)
     prims = utils.createObject('/heron', stage, asset_path, False, position=position, group=prims, allow_physics=False)
-    lake_prim = stage.DefinePrim('/lake', "Xform")
-    lake_prim.GetReferences().AddReference(scene_path)
+    #create_background(stage, scene_path, '/lake', offset=Gf.Vec3d(0, 0, 0))
     #prefix = "/heron"
     #prim_path = omni.usd.get_stage_next_free_path(stage, prefix, False)
     #robot_prim = stage.DefinePrim(prim_path, "Xform")
     #robot_prim.GetReferences().AddReference(asset_path)
     #prim = stage.GetPrimAtPath(prims[-1])
     #print(UsdGeom.Boundable(prim).ComputeLocalBound(0,"default").GetRange().GetSize())
+    simulation_context.set_simulation_dt(physics_dt=1.0 / 60.0, rendering_dt=1.0 / 30.0)
+    simulation_app.update()
+
     UWO = UnderwaterObject(stage, PhysXIFace, dc)
     THR1 = ThrusterPlugin(stage, PhysXIFace, dc)
     THR2 = ThrusterPlugin(stage, PhysXIFace, dc)
     UWO.Load(HeronHydroSettings)
     THR1.Load(HeronThrusters[0])
     THR2.Load(HeronThrusters[1])
-    THR1.UpdateCommand(1.0)
-    THR2.UpdateCommand(1.0)
+    THR1.UpdateCommand(0.2)
+    THR2.UpdateCommand(0.2)
+    UWO.UpdateFlowVelocity(np.array([0.0,0.0,0.0]))
 
     time.sleep(10)
-    while omniverse_kit.app.is_running():
-        omniverse_kit.update(1.0/30, physics_dt=1/60.0)
+
+    while simulation_app.is_running():
+        simulation_app.update()
     
     omniverse_kit.stop()
     omni.usd.get_context().save_as_stage(nucleus_server + "/Users/test/heron_dynamic_test.usd", None)

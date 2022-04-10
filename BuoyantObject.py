@@ -11,7 +11,7 @@ import math
 import PhysxUtils as utils
 
 class BuoyantObject:
-    def __init__(self, stage, prim_path, PhysXIFace, DCIFace, physics_path="/physicsScene"):
+    def __init__(self, stage, prim_path, PhysXIFace, DCIFace, physics_path="/World/PhysicsScene"):
         # Build APIs
         self._RigidBodyAPI, self._MassAPI, self._SceneAPI = utils.getUsdPhysicsAPIs(stage, prim_path, physics_path)
         # Volume of fluid displaced by the submerged object

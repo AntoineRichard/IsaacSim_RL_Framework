@@ -3,7 +3,7 @@ import omni
 import carb
 from numpy import sin, cos
 from pxr import UsdGeom, Gf, Sdf, UsdPhysics, UsdShade
-from omni.isaac.utils.scripts.nucleus_utils import find_nucleus_server
+from omni.isaac.core.utils.nucleus import find_nucleus_server
 from omni.physx.scripts import utils
 
 def CreateBasicMaterial(stage):
@@ -69,7 +69,7 @@ def createObject(prefix, stage, path, material, position=Gf.Vec3d(0, 0, 0), rota
     if allow_physics:
         utils.setRigidBody(obj_prim, "convexHull", False)
         mass_api = UsdPhysics.MassAPI.Apply(obj_prim)
-        mass_api.CreateDensityAttr(density)
+        mass_api.CreateMassAttr(density)
     return group
 
 def setScale(xform, scale):
