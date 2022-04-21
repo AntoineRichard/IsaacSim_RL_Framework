@@ -132,7 +132,14 @@ class Dreamer(tools.Module):
       #with self._strategy.scope():
       for train_step in range(n):
         log_images = self._c.log_images and log and train_step == 0
-        self.train(next(self._dataset), log_images)
+        data = next(self._dataset)
+        self.train(data, log_images)
+        if log_images:
+          with self._writer.as_default(): 
+            tf.summary.experimental.set_step(step)
+            tools.video_summary('agent/environment_reconstruction',np.array(self.image_summaries(data)),step = step)
+            rec_phy, rec_phy_std, true_phy = self.plot_dynamics(data)
+            tools.plot_summary('agent/dynamics_reconstruction', np.array(rec_phy), np.array(rec_phy_std), np.array(true_phy), step=step)
       if log:
         self._write_summaries()
     action, env_state, phy_state = self.policy(obs, env_state, phy_state, training, target_vel)
@@ -241,7 +248,7 @@ class Dreamer(tools.Module):
       # Reward: dist_reward + vel_reward.
       dist_reward = self._reward(img_env_feat).mode()
       linear_vel = tf.transpose(img_phy_feat,[1,0,2])[...,0]
-      vel_reward = 1 - tf.math.abs(targets - linear_vel)/targets
+      vel_reward = 1 - tf.math.abs((targets - linear_vel)/targets)
       vel_reward = tf.transpose(vel_reward)
       reward = dist_reward + vel_reward
 
@@ -271,6 +278,7 @@ class Dreamer(tools.Module):
           data, full_feat, env_prior_dist, env_post_dist, likes, env_div,
           env_loss, value_loss, actor_loss, env_norm, value_norm,
           actor_norm)
+    #return data
 
   def _build_model(self):
     acts = dict(
@@ -398,6 +406,10 @@ class Dreamer(tools.Module):
     # Concat and dump
     phy_model = tf.concat([phy_init_feat, phy_feat], 1)
     phy_model_std = tf.concat([phy_obs_std, phy_pred_std], 1)
+    # Add actions
+    phy_model_std = tf.concat([phy_model_std, tf.zeros_like(phy_model_std[:,:,:2])], -1)
+    phy_model = tf.concat([phy_model, data['action'][:3]], -1)
+    phy_truth = tf.concat([phy_truth, data['action'][:3]], -1)
     return phy_model, phy_model_std, phy_truth
 
   def _write_summaries(self):
@@ -419,7 +431,6 @@ def preprocess(obs, config):
   dtype = prec.global_policy().compute_dtype
   obs = obs.copy()
   with tf.device('cpu:0'):
-    #obs['input_phy'] = tf.cast(tf.expand_dims(obs['physics'],-1),dtype)
     obs['input_phy'] = tf.cast(obs['physics'],dtype)
     obs['prev_phy'] = tf.cast(obs['physics_d'],dtype)
     obs['image'] = tf.cast(obs['image'], dtype) / 255.0 - 0.5
@@ -427,10 +438,8 @@ def preprocess(obs, config):
     obs['reward'] = clip_rewards(obs['reward'])
   return obs
 
-
 def count_steps(datadir, config):
   return tools.count_episodes(datadir)[1] * config.action_repeat
-
 
 def load_dataset(directory, config):
   episode = next(tools.load_episodes(directory, 1))
@@ -490,115 +499,6 @@ def make_env(config, writer, prefix, datadir, store):
   env = wrappers.RewardObs(env)
   return env
 
-"""
-def main(config):
-  if config.gpu_growth:
-    for gpu in tf.config.experimental.list_physical_devices('GPU'):
-      tf.config.experimental.set_memory_growth(gpu, True)
-  assert config.precision in (16, 32), config.precision
-  if config.precision == 16:
-    prec.set_policy(prec.Policy('mixed_float16'))
-  config.steps = int(config.steps)
-  config.logdir.mkdir(parents=True, exist_ok=True)
-  print('Logdir', config.logdir)
-
-  # Setting up Dreamer
-  datadir = config.logdir / 'episodes'
-  testdir = config.logdir / 'test_episodes'
-  writer = tf.summary.create_file_writer(
-      str(config.logdir), max_queue=1000, flush_millis=20000)
-  writer.set_as_default()
-  actspace = gym.spaces.Box(np.array([-1,-1]),np.array([1,1]))
-  writer.flush()
-
-  has_trained = False
-  
-  step = count_steps(datadir, config)
-  # Saver
-  save_steps = [400000,500000,600000,700000,800000,900000]
-  save_values = [False,False,False,False,False,False]
-  for i, save_step in enumerate(save_steps):
-      if step > save_step:
-          save_values[i] = True
-  # Warm Up
-  if step < 2000:
-    c = http.client.HTTPConnection('localhost', config.port)
-    c.request('POST', '/toServer', '{"random": 1, "steps":'+str(config.time_limit)+', "repeat":4, "discount":1.0, "training": 1, "current_step":'+str(step)+', "reward":'+str(-10000)+'}')
-    doc = c.getresponse().read()
-
-  agent = Dreamer(config, datadir, actspace, writer)
-  if (config.logdir / 'variables.pkl').exists():
-    print('Loading checkpoint.')
-    #agent.load(config.logdir / 'variables.pkl')
-    agent._env_dynamics.load(config.logdir / 'env_dynamics_weights.pkl')
-    agent._encode.load(config.logdir / 'encoder_weights.pkl')
-    agent._decode.load(config.logdir / 'decoder_weights.pkl')
-    agent._value.load(config.logdir / 'value_weights.pkl')
-    agent._actor.load(config.logdir / 'actor_weights.pkl')
-    agent._reward.load(config.logdir / 'reward_weights.pkl')
-  if (config.logdir / 'phy_dynamics_weights.pkl').exists():
-    print('Loading physics_dynamics.')
-    agent._phy_dynamics.load(config.logdir / 'phy_dynamics_weights.pkl')
-
-  # Train and Evaluate continously
-  while step < config.steps:
-    plt.close('all')
-    step = count_steps(datadir, config)
-    reward = get_last_episode_reward(config, datadir, writer)
-    if (step % config.eval_every == 0) and (has_trained):
-      print('Evaluating')
-      c = http.client.HTTPConnection('localhost', config.port)
-      c.request('POST', '/toServer', '{"random": 0, "steps":'+str(config.time_limit)+', "repeat":0, "discount":1.0, "training": 0, "current_step":'+str(step)+', "reward":'+str(reward)+'}')
-      doc = c.getresponse().read()
-      summarize_episode(config, datadir, agent._writer, 'train', step)
-      summarize_episode(config, testdir, agent._writer, 'test', step)
-    # Train
-    print('Training for 100 steps')
-    agent._step.assign(step)
-    step = agent._step.numpy().item()
-    tf.summary.experimental.set_step(step)
-
-    #log = agent._should_log(step)
-    log = True
-    for train_step in range(100):
-      data = next(agent._dataset)
-      agent.train(data)
-    if log:  
-      summarize_train(data, agent, step)
-      agent._write_summaries()
-    has_trained=True
-
-    # Save model after each training so ROS can load the new one.
-    agent.save(config.logdir / 'variables.pkl')
-    agent._encode.save(os.path.join(config.logdir,'encoder_weights.pkl'))
-    agent._decode.save(os.path.join(config.logdir,'decoder_weights.pkl'))
-    #agent._physics.save(os.path.join(config.logdir,'physics_weights.pkl'))
-    agent._env_dynamics.save(os.path.join(config.logdir,'env_dynamics_weights.pkl'))
-    agent._phy_dynamics.save(os.path.join(config.logdir,'phy_dynamics_weights.pkl'))
-    agent._actor.save(os.path.join(config.logdir,'actor_weights.pkl'))
-    agent._reward.save(os.path.join(config.logdir,'reward_weights.pkl'))
-    agent._value.save(os.path.join(config.logdir,'value_weights.pkl'))
-
-    for i, save_step in enumerate(save_steps):
-      if (step > save_step) and (not save_values[i]):
-        save_values[i] = True
-        os.makedirs(os.path.join(config.logdir,'step-'+str(step)),exist_ok=True)
-        agent.save(os.path.join(config.logdir,'step-'+str(step)+'/variables.pkl'))
-        agent._encode.save(os.path.join(config.logdir,'step-'+str(step)+'/encoder_weights.pkl'))
-        agent._decode.save(os.path.join(config.logdir,'step-'+str(step)+'/decoder_weights.pkl'))
-        #agent._physics.save(os.path.join(config.logdir,'step-'+str(step)+'/physics_weights.pkl'))
-        agent._env_dynamics.save(os.path.join(config.logdir,'step-'+str(step)+'/env_dynamics_weights.pkl'))
-        agent._phy_dynamics.save(os.path.join(config.logdir,'step-'+str(step)+'/phy_dynamics_weights.pkl'))
-        agent._actor.save(os.path.join(config.logdir,'step-'+str(step)+'/actor_weights.pkl'))
-        agent._reward.save(os.path.join(config.logdir,'step-'+str(step)+'/reward_weights.pkl'))
-        agent._value.save(os.path.join(config.logdir,'step-'+str(step)+'/value_weights.pkl'))
-
-    # Request a new episode from ROS
-    print('Playing')
-    c = http.client.HTTPConnection('localhost', config.port)
-    c.request('POST', '/toServer', '{"random": 0, "steps":'+str(config.time_limit)+', "repeat":0, "discount":1.0, "training": 1, "current_step":'+str(step)+', "reward":'+str(reward)+'}')
-    doc = c.getresponse().read()
-"""
 if __name__ == '__main__':
   try:
     import colored_traceback

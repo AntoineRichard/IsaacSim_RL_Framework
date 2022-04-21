@@ -17,13 +17,16 @@ class GenericSensor:
         raise Exception("Not implemented")
 
 class PerfectPoseSensor(GenericSensor):
-    def __init__(self, stage, PhysXIFace, link):
+    def __init__(self, stage, PhysXIFace, DCIFace, link):
         super().__init__(stage, link)
-        self.PhysXIFace = PhysXIFace
+        self.DCIFace = DCIFace
+        self.PhysxIFace = PhysXIFace
         self.rigidBodyAPI = UsdPhysics.RigidBodyAPI.Get(stage, self.path)
+        self.rigid_body_handle = self.DCIFace.get_rigid_body(self.path)
     
     def get(self):
-        lin_vel = utils.getLinearVel(self.rigidBodyAPI)
+        self.rigid_body_handle = self.DCIFace.get_rigid_body(self.path) 
+        lin_vel = np.array(self.DCIFace.get_rigid_body_local_linear_velocity(self.rigid_body_handle))/100
         ang_vel = utils.getAngularVel(self.rigidBodyAPI)
-        pose, quat = utils.getPose(self.PhysXIFace,self.path)
+        pose, quat = utils.getPose(self.PhysxIFace,self.path)
         return lin_vel, ang_vel, pose, quat

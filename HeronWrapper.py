@@ -34,13 +34,8 @@ class HeronWrapper():
         for i, settings in enumerate(self.ThrusterSettings):
             self.THR.append(ThrusterPlugin(self.stage, self.PhysXIFace, self.DCIFace))
             self.THR[i].Load(settings)
-        # Add Physics callback
-        #def physics_update(dt: float):
-        #    print("Yes I am called")
-        #    self.update(dt)
-        #physics_sub = omni.physx.acquire_physx_interface().subscribe_physics_step_events(physics_update)
         # Add perfect pose sensor
-        self.PPS = PerfectPoseSensor(self.stage, self.PhysXIFace, self.base_link)
+        self.PPS = PerfectPoseSensor(self.stage, self.PhysXIFace, self.DCIFace, self.base_link)
         # Add lidar accessor
         self.lidar_path = "/heron/front_laser/Lidar"
         self.activateLidar()
@@ -82,14 +77,15 @@ class HeronWrapper():
             i.Update(dt)
     
     def updateCommands(self, data):
-        self.THR[0].UpdateCommand(data[0])
-        self.THR[1].UpdateCommand(data[1])
+        self.THR[0].UpdateCommand(data[1])
+        self.THR[1].UpdateCommand(data[0])
 
     def activateLidar(self):
         self.lidar_interface = _range_sensor.acquire_lidar_sensor_interface()
 
     def getLaserData(self):
         depth = self.lidar_interface.get_linear_depth_data(self.lidar_path)
+        depth[depth==20] = 100
         return depth
 
     def getState(self):

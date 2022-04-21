@@ -15,8 +15,8 @@ class LaserProjector:
         hsize = int((self.local_grid_front_size_+self.local_grid_rear_size_)/self.local_grid_res_)
         wsize = int((self.local_grid_side_size_)*2/self.local_grid_res_)
         self.size_ = max(hsize, wsize)
-        x_offset_ = int(self.local_grid_side_size_ / self.local_grid_res_)
-        y_offset_ = int(self.local_grid_rear_size_ / self.local_grid_res_)
+        x_offset_ = self.size_/2#int(self.local_grid_side_size_ / self.local_grid_res_)
+        y_offset_ = self.size_/2#int(self.local_grid_rear_size_ / self.local_grid_res_)
         self.offset_ = np.array([x_offset_, y_offset_], dtype=np.int32)
         self.kernel_size_ = int(self.ideal_dist_/self.local_grid_res_)
         self.safe_kernel_size_ = int(self.safe_to_shore_/self.local_grid_res_)
@@ -47,8 +47,8 @@ class LaserProjector:
 
     def genContourMap(self, points):
         for point in points:
-            cv2.circle(self.map_, (point[0],point[1]), self.kernel_size_, 255, -1)
-            cv2.circle(self.dreamers_map_, (point[0],point[1]), self.safe_kernel_size_, (0,0,255), -1)
+            cv2.circle(self.map_, (point[1],point[0]), self.kernel_size_, 255, -1)
+            cv2.circle(self.dreamers_map_, (point[1],point[0]), self.safe_kernel_size_, (0,0,255), -1)
         contours, _ = cv2.findContours(self.map_, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         cv2.drawContours(self.dreamers_map_, contours, -1, (0,0,0), 7)
         return cv2.resize(self.dreamers_map_[self.minx:self.maxx,self.miny:self.maxy], (64,64), cv2.INTER_NEAREST)
@@ -58,6 +58,7 @@ class LaserProjector:
         self.dreamers_map_ = self.blue_map_.copy()
 
     def projectLaser(self, ranges):
+        ranges[ranges>=20] = 100
         # Takes between 1.5 and 3.0ms for 360 points
         points = np.einsum('ij,i->ij', self.cs, ranges/self.local_grid_res_)
         points = self.offset_ + points.astype(np.int32)

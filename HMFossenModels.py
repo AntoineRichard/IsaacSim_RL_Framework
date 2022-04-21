@@ -132,7 +132,7 @@ class HMFossen(HydrodynamicModel):
     def ApplyHydrodynamicForces(self, time, _flowVelWorld):
         tau = self.ComputeHydrodynamicForces(time, _flowVelWorld)
         if not math.isnan(np.linalg.norm(tau)):
-            # Convert the forces and moments back to Gazebo's reference frame
+            # Convert the forces and moments back to Isaac's reference frame
             hydForce = tau[:3]
             hydTorque = tau[-3:]
             # Forces and torques are also wrt link frame

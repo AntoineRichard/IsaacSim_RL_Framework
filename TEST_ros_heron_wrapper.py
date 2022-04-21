@@ -57,8 +57,14 @@ if __name__ == "__main__":
         #print('new_step')
         RHW.Update(dt)
 
-    physics_sub = omni.physx.acquire_physx_interface().subscribe_physics_step_events(physics_update)
-    omni.kit.commands.execute("ROSBridgeCreateClock", path="/ROS_Clock", enabled=False)
+    physics_sub = omni.physx.().subscribe_physics_step_events(physics_update)
+    result, check = omni.kit.commands.execute("RosBridgeRosMasterCheck")
+    if not check:
+        carb.log_error("Please run roscore before executing this script")
+        simulation_app.close()
+        exit()
+
+    omni.kit.commands.execute("ROSBridgeCreacquire_physx_interfaceateClock", path="/ROS_Clock", enabled=False)
 
     prims = []
     lake = []

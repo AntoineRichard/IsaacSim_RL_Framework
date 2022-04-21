@@ -236,7 +236,7 @@ def plot_summary(name, rec, rec_std, true, step=None):
     img = np.concatenate(states[:,i],1)
     tf.summary.image(name+'_'+str(i), np.expand_dims(img,0), step=step)
 
-def simulate(agent, envs, steps=0, episodes=0, state=None):
+def simulate(agent, envs, steps=0, episodes=0, state=None, step=0, target_vel=[[1.0]]):
   # Initialize or unpack simulation state.
   if state is None:
     step, episode = 0, 0
@@ -251,17 +251,18 @@ def simulate(agent, envs, steps=0, episodes=0, state=None):
     # Reset envs if necessary.
     if done.any():
       indices = [index for index, d in enumerate(done) if d]
-      #promises = [envs[i].reset(blocking=False) for i in indices]
-      promises = [envs[i].reset() for i in indices]
+      promises = [envs[i].reset(step=step) for i in indices]
       for index, promise in zip(indices, promises):
         obs[index] = promise
     # Step agents.
     obs = {k: np.stack([o[k] for o in obs]) for k in obs[0]}
-    action, agent_env_state, agent_phy_state = agent(obs, done, agent_env_state, agent_phy_state)
+    action, agent_env_state, agent_phy_state = agent(obs, done,
+                                                      agent_env_state,
+                                                      agent_phy_state,
+                                                      target_vel)
     action = np.array(action)
     assert len(action) == len(envs)
     # Step envs.
-    #promises = [e.step(a, blocking=False) for e, a in zip(envs, action)]
     promises = [e.step(a) for e, a in zip(envs, action)]
     obs, _, done = zip(*[p[:3] for p in promises])
     obs = list(obs)

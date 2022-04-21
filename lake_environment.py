@@ -238,7 +238,6 @@ class Environment:
         self.world = world
         nucleus_server = utils.get_nucleus_server()
         scene_path = nucleus_server + scene_path
-
         
         self.setupPhysics()
         self.loadWorld(scene_path)
@@ -246,11 +245,8 @@ class Environment:
         self.world.step()
         print("waiting for materials to load...")
 
-        #while self.sim_app.is_loading():
-        #    self.sim_app.update()
-
         #Load the position sampler
-        self.FS = FollowingSampler(meta_data_path, 11.0, 9.0,13.0,0.2e6,1e6,1.0)
+        self.FS = FollowingSampler(meta_data_path, 10.5, 7.0,13.0,0.2e6,1e6,1.0)
 
     
     def loadWorld(self, scene_path):
@@ -259,7 +255,6 @@ class Environment:
 
     
     def reset(self):
-        #TODO pick a random map
         pass
 
     def setupPhysics(self):
@@ -267,12 +262,6 @@ class Environment:
 
     def getValidLocation(self, step, reward=0.0, is_training=False, mode="random"):
         xyrz, _, _ = self.FS.sample(step, reward, is_training, mode)
-        #print(xyrz)
         return [xyrz[1], xyrz[0], 0], [0, 0, xyrz[2]]
     
-#path = 'raw_generation/gen7'
-#FS = FollowingSampler(path, 11.0, 9.0,13.0,0.2e6,1e6,1.0)
-#print(FS.sample(0,0,True,"power"))
-#print(FS.sample(200000,1000,True,"power"))
-#print(FS.sample(500000,1250,True,"power"))
 

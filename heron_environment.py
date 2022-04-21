@@ -35,10 +35,11 @@ class HeronEnvironment:
         self.numsteps = 0
         self.numresets = 0
         # Projection parameters
+        self.ideal_dist = ideal_dist
         self.Proj = LaserProjector(ideal_dist)
         self.pose_coeff = pose_coeff
         # Setup gym data
-        self.action_space = spaces.Box(low=0, high=2.0, shape=(2,), dtype=np.float32)
+        self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
         self.observation_space = {"image":spaces.Box(low=0, high=255, shape=(64,64,3), dtype=np.uint8),
                                   "laser":spaces.Box(low=0, high=20.0, shape=(256,), dtype=np.float32),
                                   "physics":spaces.Box(low=-3.0, high=3.0, shape=(3,), dtype=np.float32)}
@@ -63,22 +64,23 @@ class HeronEnvironment:
         return obs, reward, done, {}
 
     def computeReward(self, obs):
-        min_dist = np.min(obs["laser"])
+        min_dist = self.ideal_dist - np.min(obs["laser"])
+        #print(min_dist, max(-20.0, (1. - min_dist*min_dist*0.5)*self.pose_coeff))
         return max(-20.0, (1. - min_dist*min_dist*0.5)*self.pose_coeff)
 
     def processObservations(self, obs):
         obs["laser"] = np.min(np.reshape(obs["laser"],[-1,2]),axis=1)
         obs["image"] = self.Proj.projectLaser(obs["laser"])
         obs["laser"] = obs["laser"][52:-52]
-        obs["physics"] = np.array([obs["linear_velocity"][0],obs["angular_velocity"][1],obs["angular_velocity"][2]])
+        obs["physics"] = np.array([obs["linear_velocity"][0],obs["linear_velocity"][1],obs["angular_velocity"][2]])
         obs["physics_d"] = self.prev_phy
         self.prev_phy = obs["physics"].copy()
         return obs
 
 
-    def reset(self):
+    def reset(self, step=0):
         self.lake.reset()
-        position, rotation = self.lake.getValidLocation(0)
+        position, rotation = self.lake.getValidLocation(step, mode="power")
         self.heron.teleport(position, rotation)
         self.numresets += 1
         self.prev_phy = [0,0,0]

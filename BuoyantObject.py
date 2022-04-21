@@ -104,20 +104,12 @@ class BuoyantObject:
             else:
                 self._is_submerged = False
                 curSubmergedHeight = self._height/2.0 - z
-            #print(curSubmergedHeight)
-            #print(self._bounding_box)
             volume = curSubmergedHeight * self._water_level_plane_area
-            #print(volume)
-            #print()
             buoyancyForce = np.array([0, 0, volume * self._fluid_density * self._g])
             buoyancyTorque = np.array([
                 -1 * self._metacentric_width * math.sin(roll) * buoyancyForce[2],
                 -1 * self._metacentric_length * math.sin(pitch) * buoyancyForce[2],
                 0])
-        #print(buoyancyTorque, buoyancyForce)
-        #print(curSubmergedHeight, self._submerged_height)
-        #print(self._g, volume, self._fluid_density, self._mass)
-        #print(self._g*self._fluid_density*volume, self._g*self._mass)
      
         return buoyancyForce, buoyancyTorque
 

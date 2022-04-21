@@ -26,8 +26,8 @@ class IsaacSim:
     info = {'discount': np.array(1.0, np.float32)}
     return obs, reward, done, info
 
-  def reset(self):
-    obs, reward, done, opt = self._env.reset()
+  def reset(self, step=0):
+    obs, reward, done, opt = self._env.reset(step=step)
     return obs
 
 class Collect:
@@ -57,8 +57,8 @@ class Collect:
         callback(episode)
     return obs, reward, done, info
 
-  def reset(self):
-    obs = self._env.reset()
+  def reset(self, step=0):
+    obs = self._env.reset(step=step)
     transition = obs.copy()
     transition['action'] = np.zeros(self._env.action_space.shape)
     transition['reward'] = 0.0
@@ -98,9 +98,9 @@ class TimeLimit:
       self._step = None
     return obs, reward, done, info
 
-  def reset(self):
+  def reset(self,step=0):
     self._step = 0
-    return self._env.reset()
+    return self._env.reset(step=step)
 
 
 class ActionRepeat:
@@ -171,8 +171,8 @@ class ObsDict:
     obs = {self._key: np.array(obs)}
     return obs, reward, done, info
 
-  def reset(self):
-    obs = self._env.reset()
+  def reset(self, step=0):
+    obs = self._env.reset(step=step)
     obs = {self._key: np.array(obs)}
     return obs
 
@@ -232,7 +232,7 @@ class RewardObs:
     obs['reward'] = reward
     return obs, reward, done, info
 
-  def reset(self):
-    obs = self._env.reset()
+  def reset(self,step=0):
+    obs = self._env.reset(step=step)
     obs['reward'] = 0.0
     return obs
