@@ -2,7 +2,7 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import NavSatFix, NavSatStatus, Imu
 from geometry_msgs.msg import Vector3Stamped
 
-import PhysxUtils as utils
+import BuoyancyPhysics.PhysxUtils as utils
 import numpy as np
 from pxr import UsdPhysics
 import math

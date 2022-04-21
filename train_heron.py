@@ -32,8 +32,8 @@ if __name__ == "__main__":
     #ext_manager.set_extension_enabled_immediate("omni.kit.livestream.native", True)
     #ext_manager.set_extension_enabled_immediate("omni.kit.window.stage", True)
     #ext_manager.set_extension_enabled_immediate("omni.kit.property.bundle", True)
-    from imgphy_flex2img_dreamer_large_newdyn import Dreamer, make_env, define_config, count_steps
-    from tools import simulate, args_type
+    from Dreamer.imgphy_flex2img_dreamer_large_newdyn import Dreamer, make_env, define_config, count_steps
+    from Dreamer.tools import simulate, args_type
 
     def train(config):
         if config.gpu_growth:

@@ -24,9 +24,9 @@ from tensorflow_probability import distributions as tfd
 
 sys.path.append(str(pathlib.Path(__file__).parent))
 
-import models
-import tools
-import wrappers
+import Dreamer.models as models
+import Dreamer.tools as tools
+import Dreamer.wrappers as wrappers
 
 def define_config():
   config = tools.AttrDict()

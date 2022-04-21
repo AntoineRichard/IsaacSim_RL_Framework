@@ -6,9 +6,9 @@
  Antoine Richard: antoine.richard@gatech.edu
 """
 
-from BuoyantObject import BuoyantObject
+from BuoyancyPhysics.BuoyantObject import BuoyantObject
 import numpy as np
-import PhysxUtils as utils
+import BuoyancyPhysics.PhysxUtils as utils
 
 class HydrodynamicModel(BuoyantObject):
     def __init__(self, stage, prim_path, PhysxIFace, DCIFace, settings):

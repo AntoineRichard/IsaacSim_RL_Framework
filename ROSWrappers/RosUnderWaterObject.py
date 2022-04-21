@@ -11,8 +11,8 @@ import carb
 class ROSHeronWrapper():
     def __init__(self, stage, PhysXIFace, DCIFace, IMUIFace, HydroSettings, ThrusterSettings, namespace="/robot"):
         # Load plugins after kit is loaded
-        from UnderWaterObject import UnderWaterObject
-        from Thruster import ThrusterPlugin
+        from BuoyancyPhysics.UnderWaterObject import UnderWaterObject
+        from BuoyancyPhysics.Thruster import ThrusterPlugin
         
  
         # Hydrodynamics simulation with python plugin

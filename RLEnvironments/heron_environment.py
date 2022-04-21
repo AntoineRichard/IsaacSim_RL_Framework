@@ -5,10 +5,10 @@ import omni
 import cv2
 
 
-from HeronSettings import HeronHydroSettings, HeronThrusters
-from HeronWrapper import HeronWrapper
-from LaserProjector import LaserProjector
-from lake_environment import Environment
+from USVConfigurations.HeronSettings import HeronHydroSettings, HeronThrusters
+from RLEnvironments.HeronWrapper import HeronWrapper
+from RLEnvironments.LaserProjector import LaserProjector
+from RLEnvironments.lake_environment import Environment
 from omni.isaac.core import World
 
 class HeronEnvironment:

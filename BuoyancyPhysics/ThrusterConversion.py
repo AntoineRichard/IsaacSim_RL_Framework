@@ -7,7 +7,7 @@
 """
 
 from scipy.interpolate import interp1d
-import PhysxUtils as utils
+import BuoyancyPhysics.PhysxUtils as utils
 
 
 class ConversionFunction:

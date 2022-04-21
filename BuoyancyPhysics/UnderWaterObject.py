@@ -5,9 +5,9 @@
  Antoine Richard: antoine.richard@gatech.edu
 """
 
-from HydrodynamicModel import *
-from HMFossenModels import *
-import PhysxUtils as utils
+from BuoyancyPhysics.HydrodynamicModel import *
+from BuoyancyPhysics.HMFossenModels import *
+import BuoyancyPhysics.PhysxUtils as utils
 
 class UnderWaterObject:
     def __init__(self, stage, PhysXIFace, DCIFace):        

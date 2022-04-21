@@ -2,14 +2,12 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import NavSatFix, NavSatStatus, Imu
 from geometry_msgs.msg import Vector3Stamped
 
-import PhysxUtils as utils
+import BuoyancyPhysics.PhysxUtils as utils
 import numpy as np
 import UsdPhysics
 import rospy
 import math
 import os
-
-from standalone_examples.python_samples.Buoyancy.TEST_usv_thruster_hydrodynamics import PhysXIFace
 
 class GenericSensor:
     def __init__(self, stage, simulation_handle, settings, namespace=""):

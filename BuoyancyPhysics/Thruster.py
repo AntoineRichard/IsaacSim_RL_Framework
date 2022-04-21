@@ -8,9 +8,9 @@
 import numpy as np
 import math
 
-import ThrusterDynamics
-import ThrusterConversion
-import PhysxUtils as utils
+import BuoyancyPhysics.ThrusterDynamics as ThrusterDynamics
+import BuoyancyPhysics.ThrusterConversion as ThrusterConversion
+import BuoyancyPhysics.PhysxUtils as utils
 
 class ThrusterPlugin():
     def __init__(self, stage, PhysXIFace, DCIFace):

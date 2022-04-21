@@ -6,7 +6,7 @@ import pickle
 import cv2
 import os
 from pxr import Gf
-import utils
+import RLEnvironments.IsaacUtils as utils
 
 def load(path:str) -> (dict, list, np.array):
     with open(os.path.join(path, 'contours.pkl'),'rb') as f:

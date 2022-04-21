@@ -8,7 +8,7 @@
 import numpy as np
 import math
 
-import PhysxUtils as utils
+import BuoyancyPhysics.PhysxUtils as utils
 
 class BuoyantObject:
     def __init__(self, stage, prim_path, PhysXIFace, DCIFace, physics_path="/World/PhysicsScene"):

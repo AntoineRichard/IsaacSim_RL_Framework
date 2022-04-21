@@ -6,7 +6,7 @@
  Antoine Richard: antoine.richard@gatech.edu
 """
 
-from HydrodynamicModel import *
+from BuoyancyPhysics.HydrodynamicModel import *
 import math
 
 

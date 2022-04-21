@@ -6,7 +6,7 @@
  Antoine Richard: antoine.richard@gatech.edu
 """
 
-import PhysxUtils as utils
+import BuoyancyPhysics.PhysxUtils as utils
 import math
 
 

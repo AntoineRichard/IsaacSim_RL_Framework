@@ -4,7 +4,7 @@ from tensorflow.keras import layers as tfkl
 from tensorflow_probability import distributions as tfd
 from tensorflow.keras.mixed_precision import experimental as prec
 
-import tools
+import Dreamer.tools as tools
 
 def Conv1DTranspose(input_tensor, filters, kernel_size, strides=2, padding='same', activation='relu'):
     """

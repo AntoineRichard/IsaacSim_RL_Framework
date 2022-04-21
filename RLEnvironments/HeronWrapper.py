@@ -3,8 +3,8 @@ import omni
 #import carb
 from pxr import Gf, UsdGeom
 from omni.isaac.range_sensor import _range_sensor
-from IsaacSensors import PerfectPoseSensor
-import utils
+from SensorModels.IsaacSensors import PerfectPoseSensor
+import RLEnvironments.IsaacUtils as utils
 import numpy as np
 
 class HeronWrapper():
@@ -24,8 +24,8 @@ class HeronWrapper():
 
     def loadPlugins(self):
         # Load plugins after kit is loaded
-        from UnderWaterObject import UnderWaterObject
-        from Thruster import ThrusterPlugin
+        from BuoyancyPhysics.UnderWaterObject import UnderWaterObject
+        from BuoyancyPhysics.Thruster import ThrusterPlugin
         # Hydrodynamics simulation with python plugin
         self.UWO = UnderWaterObject(self.stage, self.PhysXIFace, self.DCIFace)
         self.UWO.Load(self.HydroSettings)
