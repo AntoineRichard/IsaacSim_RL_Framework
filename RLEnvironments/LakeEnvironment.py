@@ -238,10 +238,8 @@ class Environment:
         self.world = world
         nucleus_server = utils.get_nucleus_server()
         scene_path = nucleus_server + scene_path
-        
         self.setupPhysics()
         self.loadWorld(scene_path)
-        
         self.world.step()
         print("waiting for materials to load...")
 
@@ -252,7 +250,37 @@ class Environment:
     def loadWorld(self, scene_path):
         self.lake = []
         self.lake = utils.createObject('/lake', self.stage, scene_path, False, position=Gf.Vec3d(0,0,0), group=self.lake, allow_physics=False)
+    
+    def reset(self):
+        pass
 
+    def setupPhysics(self):
+        utils.setup_cpu_physics(self.stage, "/World/PhysicsScene")
+
+    def getValidLocation(self, step, reward=0.0, is_training=False, mode="random"):
+        xyrz, _, _ = self.FS.sample(step, reward, is_training, mode)
+        return [xyrz[1], xyrz[0], 0], [0, 0, xyrz[2]]
+
+
+class MultiLakeEnvironment:
+    def __init__(self, stage, world, scene_path="/LakeSimulation/merged_lakes.usd", meta_data_path="standalone_examples/python_samples/Buoyancy/raw_generation/"):
+        #Load the scene (it's prebuilt)
+        self.stage = stage
+        self.world = world
+        nucleus_server = utils.get_nucleus_server()
+        scene_path = nucleus_server + scene_path
+        self.setupPhysics()
+        self.loadWorld(scene_path)
+        self.world.step()
+        print("waiting for materials to load...")
+
+        #Load the position sampler
+        self.FS = FollowingSampler(meta_data_path, 10.5, 7.0,13.0,0.2e6,1e6,1.0)
+
+    
+    def loadWorld(self, scene_path):
+        self.lake = []
+        self.lake = utils.createObject('/lake', self.stage, scene_path, False, position=Gf.Vec3d(0,0,0), group=self.lake, allow_physics=False)
     
     def reset(self):
         pass
@@ -264,4 +292,16 @@ class Environment:
         xyrz, _, _ = self.FS.sample(step, reward, is_training, mode)
         return [xyrz[1], xyrz[0], 0], [0, 0, xyrz[2]]
     
+"""
+import omni
+from pxr import Gf, Sdf, UsdPhysics
 
+stage = omni.usd.get_context().get_stage()
+path = "/World/Xform"
+prim = stage.GetPrimAtPath(path)
+attr = prim.GetAttributes()
+print(attr)
+visibility = prim.GetAttribute('visibility')
+print(visibility.Get())
+visibility.Set('invisible')
+"""

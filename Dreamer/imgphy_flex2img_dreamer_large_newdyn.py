@@ -125,7 +125,7 @@ class Dreamer(tools.Module):
     if phy_state is not None and reset.any():
       mask = tf.cast(1 - reset, self._float)[:, None]
       phy_state = tf.nest.map_structure(lambda x: x * mask, phy_state)
-    if self._should_train(step):
+    if self._should_train(step) and training:
       log = self._should_log(step)
       n = self._c.pretrain if self._should_pretrain() else self._c.train_steps
       print(f'Training for {n} steps.')

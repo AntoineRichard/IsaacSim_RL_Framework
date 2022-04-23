@@ -19,7 +19,6 @@ from scipy.spatial.transform import Rotation as SSTR
 import numpy as np
 import math
 from pxr import UsdGeom, UsdPhysics
-import carb
 
 def Q2RPY(quat):
     # QX,QY,QZ,QW

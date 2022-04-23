@@ -8,7 +8,7 @@ import cv2
 from USVConfigurations.HeronSettings import HeronHydroSettings, HeronThrusters
 from RLEnvironments.HeronWrapper import HeronWrapper
 from RLEnvironments.LaserProjector import LaserProjector
-from RLEnvironments.lake_environment import Environment
+from RLEnvironments.LakeEnvironment import Environment
 from omni.isaac.core import World
 
 class HeronEnvironment:
