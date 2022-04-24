@@ -232,7 +232,6 @@ class DreamerImg2ImgNoPhysics(tools.Module):
     self._metrics['model_loss'].update_state(model_loss)
     self._metrics['value_loss'].update_state(value_loss)
     self._metrics['actor_loss'].update_state(actor_loss)
-    self._metrics['action_ent'].update_state(self._actor(feat).entropy())
 
   @tf.function
   def _image_summaries(self, data, embed, image_pred):

@@ -26,12 +26,29 @@ import Dreamer.models as models
 import Dreamer.tools as tools
 import Dreamer.wrappers as wrappers
 from Dreamer.dreamer_img2img_NoPhysics import DreamerImg2ImgNoPhysics
-from Dreamer.dreamer_img2img_NoPhysics import count_steps, load_dataset, summarize_episode, get_last_episode_reward, make_env  
+from Dreamer.dreamer_img2img_NoPhysics import count_steps, summarize_episode, get_last_episode_reward, make_env  
 from Dreamer.base_config import define_config
 
 class DreamerImg2ImgRSSMPhysics(DreamerImg2ImgNoPhysics):
   def __init__(self, config, datadir, actspace, writer):
-    super.__init__(self, config, datadir, actspace, writer)
+    self._c = config
+    self._actspace = actspace
+    self._actdim = actspace.n if hasattr(actspace, 'n') else actspace.shape[0]
+    self._writer = writer
+    self._random = np.random.RandomState(config.seed)
+    with tf.device('cpu:0'):
+      self._step = tf.Variable(count_steps(datadir, config), dtype=tf.int64)
+    self._should_pretrain = tools.Once()
+    self._should_train = tools.Every(config.train_every)
+    self._should_log = tools.Every(config.log_every)
+    self._last_log = None
+    self._last_time = time.time()
+    self._metrics = collections.defaultdict(tf.metrics.Mean)
+    self._metrics['expl_amount']  # Create variable for checkpoint.
+    self._float = prec.global_policy().compute_dtype
+ 
+    self._dataset = iter(load_dataset(datadir, self._c))
+    self._build_model()
 
   def __call__(self, obs, reset, env_state=None, phy_state=None, training=True):
     step = self._step.numpy().item()
@@ -275,10 +292,22 @@ def preprocess(obs, config):
   dtype = prec.global_policy().compute_dtype
   obs = obs.copy()
   with tf.device('cpu:0'):
-    #obs['input_phy'] = tf.cast(tf.expand_dims(obs['physics'],-1),dtype)
     obs['input_phy'] = tf.cast(obs['physics'],dtype)
     obs['prev_phy'] = tf.cast(obs['physics_d'],dtype)
     obs['image'] = tf.cast(obs['image'], dtype) / 255.0 - 0.5
     clip_rewards = dict(none=lambda x: x, tanh=tf.tanh)[config.clip_rewards]
     obs['reward'] = clip_rewards(obs['reward'])
   return obs
+
+def load_dataset(directory, config):
+  episode = next(tools.load_episodes(directory, 1))
+  types = {k: v.dtype for k, v in episode.items()}
+  shapes = {k: (None,) + v.shape[1:] for k, v in episode.items()}
+  generator = lambda: tools.load_episodes(
+      directory, config.train_steps, config.batch_length,
+      config.dataset_balance)
+  dataset = tf.data.Dataset.from_generator(generator, types, shapes)
+  dataset = dataset.batch(config.batch_size, drop_remainder=True)
+  dataset = dataset.map(functools.partial(preprocess, config=config))
+  dataset = dataset.prefetch(10)
+  return dataset

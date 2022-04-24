@@ -31,7 +31,24 @@ from Dreamer.base_config import define_config
 
 class DreamerImg2ImgGoalRSSMPhysics(DreamerImg2ImgRSSMPhysics):
   def __init__(self, config, datadir, actspace, writer):
-    super.__init__(self, config, datadir, actspace, writer)
+    self._c = config
+    self._actspace = actspace
+    self._actdim = actspace.n if hasattr(actspace, 'n') else actspace.shape[0]
+    self._writer = writer
+    self._random = np.random.RandomState(config.seed)
+    with tf.device('cpu:0'):
+      self._step = tf.Variable(count_steps(datadir, config), dtype=tf.int64)
+    self._should_pretrain = tools.Once()
+    self._should_train = tools.Every(config.train_every)
+    self._should_log = tools.Every(config.log_every)
+    self._last_log = None
+    self._last_time = time.time()
+    self._metrics = collections.defaultdict(tf.metrics.Mean)
+    self._metrics['expl_amount']  # Create variable for checkpoint.
+    self._float = prec.global_policy().compute_dtype
+ 
+    self._dataset = iter(load_dataset(datadir, self._c))
+    self._build_model()
 
   def __call__(self, obs, reset, env_state=None, phy_state=None, target_vel=[[1.0]], training=True):
     step = self._step.numpy().item()

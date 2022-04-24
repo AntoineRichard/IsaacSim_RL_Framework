@@ -20,7 +20,7 @@ def define_config():
   config.parallel = 'none'
   config.action_repeat = 1
   config.time_limit = 500
-  config.prefill = 5000
+  config.prefill = 2500
   config.eval_noise = 0.0
   config.clip_rewards = 'none'
   # Model.

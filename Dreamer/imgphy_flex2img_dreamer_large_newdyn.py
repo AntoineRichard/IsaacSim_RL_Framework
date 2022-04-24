@@ -129,7 +129,6 @@ class Dreamer(tools.Module):
       log = self._should_log(step)
       n = self._c.pretrain if self._should_pretrain() else self._c.train_steps
       print(f'Training for {n} steps.')
-      #with self._strategy.scope():
       for train_step in range(n):
         log_images = self._c.log_images and log and train_step == 0
         data = next(self._dataset)
@@ -427,6 +426,18 @@ class Dreamer(tools.Module):
     print(f'[{step}]', ' / '.join(f'{k} {v:.1f}' for k, v in metrics))
     self._writer.flush()
 
+  def export4ROS(self, path="latest"):
+    print("saving")
+    os.makedirs(os.path.join(self._c.logdir,path), exist_ok=True)
+    self._encode.save(os.path.join(self._c.logdir,path,'encoder_weights.pkl'))
+    self._decode.save(os.path.join(self._c.logdir,path,'decoder_weights.pkl'))
+    self._env_dynamics.save(os.path.join(self._c.logdir,path,'env_dynamics_weights.pkl'))
+    self._phy_dynamics.save(os.path.join(self._c.logdir,path,'phy_dynamics_weights.pkl'))
+    self._actor.save(os.path.join(self._c.logdir,path,'actor_weights.pkl'))
+    self._reward.save(os.path.join(self._c.logdir,path,'reward_weights.pkl'))
+    self._value.save(os.path.join(self._c.logdir,path,'value_weights.pkl'))
+
+
 def preprocess(obs, config):
   dtype = prec.global_policy().compute_dtype
   obs = obs.copy()
@@ -498,14 +509,3 @@ def make_env(config, writer, prefix, datadir, store):
   env = wrappers.Collect(env, callbacks, config.precision)
   env = wrappers.RewardObs(env)
   return env
-
-if __name__ == '__main__':
-  try:
-    import colored_traceback
-    colored_traceback.add_hook()
-  except ImportError:
-    pass
-  parser = argparse.ArgumentParser()
-  for key, value in define_config().items():
-    parser.add_argument(f'--{key}', type=tools.args_type(value), default=value)
-  main(parser.parse_args())

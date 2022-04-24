@@ -31,7 +31,7 @@ from Dreamer.base_config import define_config
 
 class DreamerImg2ImgGoalARXNNPhysics(DreamerImg2ImgGoalRSSMPhysics):
   def __init__(self, config, datadir, actspace, writer):
-    super.__init__(self, config, datadir, actspace, writer)
+    super().__init__(config, datadir, actspace, writer)
 
   def __call__(self, obs, reset, env_state=None, phy_state=None, target_vel=[[1.0]], training=True):
     step = self._step.numpy().item()
