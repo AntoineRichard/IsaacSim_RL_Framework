@@ -580,7 +580,7 @@ def static_scan_no_sampling(fn, inputs, start, reverse=False):
   outputs = [tf.stack(x, 0) for x in outputs]
   return tf.nest.pack_sequence_as(start, outputs)
 
-def forward_sync_DR(env_dyn, phy_dyn, env_start, phy_start, policy, physics, inputs, reverse=False, randomize=False, rand=[]):
+def forward_sync_dynamics_randomization(env_dyn, phy_dyn, env_start, phy_start, policy, physics, inputs, reverse=False, randomize=False, rand=[]):
   env_last = env_start
   phy_last = phy_start
   env_outputs = [[] for _ in tf.nest.flatten(env_start)]
