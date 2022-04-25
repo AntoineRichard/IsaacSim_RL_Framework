@@ -107,3 +107,6 @@ class ThrusterPlugin():
 
     def UpdateCommand(self, value):
         self._inputCommand = value
+
+    def getCmd(self):
+        return self._inputCommand
