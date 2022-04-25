@@ -36,7 +36,8 @@ HeronHydroSettings = {
         }
     }]
 }
-HeronThrusters = [
+
+HeronThrustersSettings = [
     {
         "linkName":"/heron/thruster_0", #RigidBody path
         "jointName":"/heron/base_link/thruster_0_joint", #Joint path

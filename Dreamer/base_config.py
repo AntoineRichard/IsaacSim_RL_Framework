@@ -15,9 +15,22 @@ def define_config():
   config.precision = 32
   config.port = 8080
   # Environment.
-  config.environment_name = 'lake'
-  config.environment_specs = {"physics_dt":1.0/60.0,"render_dt":1.0/12.0,"variation":0}
-  config.task = 'follow_shore_flex'
+  config.world_specs = {"physics_dt":1.0/60.0,"rendering_dt":1.0/12.0}
+  config.env_name = 'lake'
+  config.env_specs = {"scene_path":"/LakeSimulation/",
+                        "meta_data_path":"standalone_examples/python_samples/Buoyancy/raw_generation/",
+                        "variation":0}
+  config.robot_name = 'heron'
+  config.task_name = 'follow_shore_velocity_goal'
+  config.task_specs = {"ideal_dist":10.5,
+                        "min_dist":7.0,
+                        "max_dist":13.0,
+                        "warmup":2.5e5,
+                        "target_step":1e6,
+                        "alpha":1.0,
+                        "isaac_res":100,
+                        "map_res":0.1,
+                        "pose_coeff":2.5}
   config.envs = 1
   config.parallel = 'none'
   config.action_repeat = 1

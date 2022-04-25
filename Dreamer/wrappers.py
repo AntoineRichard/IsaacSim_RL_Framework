@@ -9,9 +9,13 @@ import numpy as np
 from PIL import Image
 
 class IsaacSim:
-  def __init__(self):
-    from RLEnvironments.FlexFollowShoreEnvironment import HeronEnvironment
-    self._env = HeronEnvironment()
+  def __init__(self, config):
+    from RLEnvironments.EnvironmentManager import getEnvironment
+    self._env = getEnvironment(config.env_name, config.task_name,
+                              config.robot_name, world_specs=config.world_specs,
+                              env_specs=config.env_specs, task_specs=config.task_specs)
+    #from RLEnvironments.FlexFollowShoreEnvironment import HeronEnvironment
+    #self._env = HeronEnvironment()
 
   @property
   def observation_space(self):

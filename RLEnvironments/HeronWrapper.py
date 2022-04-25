@@ -4,23 +4,25 @@ import omni
 from pxr import Gf, UsdGeom
 from omni.isaac.range_sensor import _range_sensor
 from SensorModels.IsaacSensors import PerfectPoseSensor
+from USVConfigurations.HeronSettings import HeronHydroSettings, HeronThrustersSettings
 import RLEnvironments.IsaacUtils as utils
 import numpy as np
 
 class HeronWrapper():
-    def __init__(self, stage, HydroSettings, ThrusterSettings):
+    def __init__(self, stage):
         from omni.physx import get_physx_interface
         from omni.isaac.dynamic_control import _dynamic_control
 
         nucleus_server = utils.get_nucleus_server()
         self.asset_path = nucleus_server + "/LakeSimulation/heron_with_laser.usd"
         self.stage = stage
-        self.HydroSettings = HydroSettings
-        self.ThrusterSettings = ThrusterSettings
+        self.HydroSettings = HeronHydroSettings
+        self.ThrusterSettings = HeronThrustersSettings
         self.PhysXIFace = get_physx_interface()
         self._dynamic_control = _dynamic_control
         self.DCIFace = _dynamic_control.acquire_dynamic_control_interface()
         self.ar = None
+        self.target = [0,0]
 
     def loadPlugins(self):
         # Load plugins after kit is loaded
@@ -71,14 +73,27 @@ class HeronWrapper():
         #        velocity = np.linalg.norm([lin_vel.x, lin_vel.y, lin_vel.z])
         #        frame = frame + 1
 
+    def smoothCommands(self, beta = 0.2):
+        if abs(self.THR[0].getCmd() - self.target[0]) > beta:
+            self.THR[0].UpdateCommand(self.THR[0].getCmd() + np.sign(-self.THR[0].getCmd() + self.target[0])*beta)
+        else:
+            self.THR[0].UpdateCommand(self.target[0])
+        if abs(self.THR[1].getCmd() - self.target[1]) > beta:
+            self.THR[1].UpdateCommand(self.THR[1].getCmd() + np.sign(-self.THR[1].getCmd() + self.target[1])*beta)
+        else:
+            self.THR[1].UpdateCommand(self.target[1])
+
     def update(self, dt):
         self.UWO.Update(dt)
+        self.smoothCommands()
         for i in self.THR:
             i.Update(dt)
     
     def updateCommands(self, data):
-        self.THR[0].UpdateCommand(data[1])
-        self.THR[1].UpdateCommand(data[0])
+        self.target[0] = data[1]
+        self.target[1] = data[0]
+        #self.THR[0].UpdateCommand(data[1])
+        #self.THR[1].UpdateCommand(data[0])
 
     def activateLidar(self):
         self.lidar_interface = _range_sensor.acquire_lidar_sensor_interface()

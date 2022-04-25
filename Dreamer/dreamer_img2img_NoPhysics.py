@@ -234,16 +234,23 @@ class DreamerImg2ImgNoPhysics(tools.Module):
     self._metrics['actor_loss'].update_state(actor_loss)
 
   @tf.function
-  def _image_summaries(self, data, embed, image_pred):
+  def image_summaries(self, data):
+    # Real 
     truth = data['image'][:6] + 0.5
-    recon = image_pred.mode()[:6]
+    # Initial states (5 steps warmup)
+    embed = self._encode(data)
     init, _ = self._dynamics.observe(embed[:6, :5], data['action'][:6, :5])
+    init_feat = self._dynamics.get_feat(init)
     init = {k: v[:, -1] for k, v in init.items()}
-    prior = self._dynamics.imagine(data['action'][:6, 5:], init)
-    openl = self._decode(self._dynamics.get_feat(prior)).mode()
-    model = tf.concat([recon[:, :5] + 0.5, openl + 0.5], 1)
-    error = (model - truth + 1) / 2
-    openl = tf.concat([truth, model, error], 2)
+    # Environment imagination
+    prior = self._dynamics.imagine(data['action'][:6, 5:], init) 
+    feat = self._dynamics.get_feat(prior)
+    # Environment reconstruction
+    obs = self._decode(init_feat).mode()
+    openl = self._decode(feat).mode()
+    env_model = tf.concat([obs[:, :5] + 0.5, openl + 0.5], 1)
+    error = (env_model - truth + 1) / 2
+    openl = tf.concat([truth, env_model, error], 2)
     return openl
 
   def _write_summaries(self):
@@ -322,7 +329,7 @@ def get_last_episode_reward(config, datadir):
   return ret
 
 def make_env(config, writer, prefix, datadir, store):
-  env = wrappers.IsaacSim()
+  env = wrappers.IsaacSim(config)
   env = wrappers.TimeLimit(env, config.time_limit / config.action_repeat)
   callbacks = []
   if store:
@@ -332,3 +339,57 @@ def make_env(config, writer, prefix, datadir, store):
   env = wrappers.Collect(env, callbacks, config.precision)
   env = wrappers.RewardObs(env)
   return env
+
+def train(config):
+  if config.gpu_growth:
+    for gpu in tf.config.experimental.list_physical_devices('GPU'):
+      tf.config.experimental.set_memory_growth(gpu, True)
+  assert config.precision in (16, 32), config.precision
+  if config.precision == 16:
+    prec.set_policy(prec.Policy('mixed_float16'))
+  config.steps = int(config.steps)
+  config.logdir.mkdir(parents=True, exist_ok=True)
+  print('Logdir', config.logdir)
+
+  # Create environments.
+  datadir = config.logdir / 'episodes'
+  writer = tf.summary.create_file_writer(str(config.logdir), max_queue=1000, flush_millis=20000)
+  writer.set_as_default()
+  train_envs = [make_env(config, writer, 'train', datadir, store=True)]
+  #test_envs = [make_env(config, writer, 'test', datadir, store=False)]
+  actspace = train_envs[0].action_space
+
+  # Prefill dataset with random episodes.
+  step = count_steps(datadir, config)
+  prefill = max(0, config.prefill - step)
+  print(f'Prefill dataset with {prefill} steps.')
+  random_agent = lambda o, d, _ : ([actspace.sample() for _ in d], None)
+  tools.simulate(random_agent, train_envs, prefill / config.action_repeat)
+  writer.flush()
+
+  # Build agent
+  step = count_steps(datadir, config)
+  print(f'Simulating agent for {config.steps-step} steps.')
+  agent = DreamerImg2ImgNoPhysics(config, datadir, actspace, writer)
+
+  # Load weights
+  if (config.logdir / 'variables.pkl').exists():
+    print('Load checkpoint.')
+    agent.load(config.logdir / 'variables.pkl')
+  if (config.logdir / 'phy_dynamics_weights.pkl').exists():
+    print('Loading physics_dynamics.')
+    agent._phy_dynamics.load(config.logdir / 'phy_dynamics_weights.pkl')
+
+  # Train and regularly evaluate the agent.
+  state = None
+  while step < config.steps:
+    print('Start evaluation.')
+    tools.simulate(functools.partial(agent, training=False), train_envs, episodes=1, step=step)
+    writer.flush()
+    print('Start collection.')
+    steps = config.eval_every // config.action_repeat
+    state = tools.simulate(agent, train_envs, steps, state=state, step=step)
+    step = count_steps(datadir, config)
+    print('Saving.')
+    agent.save(config.logdir / 'variables.pkl')
+    agent.export4ROS()
