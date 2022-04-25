@@ -108,11 +108,21 @@ class DreamerImg2ImgRSSMPhysics(DreamerImg2ImgNoPhysics):
 
   def _train(self, data, log_images):
     likes = tools.AttrDict()
-    phy_post, phy_prior = self._phy_dynamics.observe(data['input_phy'], data['action'])
-    # Get features
-    phy_feat = self._phy_dynamics.get_feat(phy_post)
-    # Reconstruct
-    physics_pred = self._physics(phy_feat)
+    with tf.GradientTape() as phy_tape:
+      # Observation
+      phy_post, phy_prior = self._phy_dynamics.observe(data['input_phy'], data['action'])
+      # Get features
+      phy_feat = self._phy_dynamics.get_feat(phy_post)
+      # Reconstruct
+      physics_pred = self._physics(phy_feat)
+      # Reconstruction errors
+      likes.physics = tf.reduce_mean(physics_pred.log_prob(data['input_phy']))
+      # World model loss
+      phy_prior_dist = self._env_dynamics.get_dist(phy_prior)
+      phy_post_dist = self._env_dynamics.get_dist(phy_post)
+      phy_div = tf.reduce_mean(tfd.kl_divergence(phy_post_dist, phy_prior_dist))
+      phy_div = tf.maximum(phy_div, 1.5)
+      phy_loss = - likes.physics + self._c.kl_scale * phy_div
  
     with tf.GradientTape() as env_tape:
       # Observation
@@ -166,6 +176,7 @@ class DreamerImg2ImgRSSMPhysics(DreamerImg2ImgNoPhysics):
       value_loss = -tf.reduce_mean(discount * value_pred.log_prob(target))
 
     env_norm = self._env_opt(env_tape, env_loss)
+    phy_norm = self._phy_opt(phy_tape, phy_loss)
     actor_norm = self._actor_opt(actor_tape, actor_loss)
     value_norm = self._value_opt(value_tape, value_loss)
 
@@ -336,8 +347,8 @@ def train(config):
   step = count_steps(datadir, config)
   prefill = max(0, config.prefill - step)
   print(f'Prefill dataset with {prefill} steps.')
-  random_agent = lambda o, d, _, __,___ : ([actspace.sample() for _ in d], None, None)
-  tools.simulate(random_agent, train_envs, prefill / config.action_repeat)
+  random_agent = lambda o, d, _, __ : ([actspace.sample() for _ in d], None, None)
+  tools.simulate_2states(random_agent, train_envs, prefill / config.action_repeat)
   writer.flush()
 
   # Build agent
@@ -357,11 +368,11 @@ def train(config):
   state = None
   while step < config.steps:
     print('Start evaluation.')
-    tools.simulate(functools.partial(agent, training=False), train_envs, episodes=1, step=step, target_vel=[[random.random()+0.3]])
+    tools.simulate_2states(functools.partial(agent, training=False), train_envs, episodes=1, step=step)
     writer.flush()
     print('Start collection.')
     steps = config.eval_every // config.action_repeat
-    state = tools.simulate(agent, train_envs, steps, state=state, step=step, target_vel=[[random.random()+0.3]])
+    state = tools.simulate_2states(agent, train_envs, steps, state=state, step=step)
     step = count_steps(datadir, config)
     print('Saving.')
     agent.save(config.logdir / 'variables.pkl')
