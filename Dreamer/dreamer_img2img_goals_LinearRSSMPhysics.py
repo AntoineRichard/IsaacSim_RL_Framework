@@ -144,7 +144,7 @@ def train(config):
   prefill = max(0, config.prefill - step)
   print(f'Prefill dataset with {prefill} steps.')
   random_agent = lambda o, d, _, __,___ : ([actspace.sample() for _ in d], None, None)
-  tools.simulate(random_agent, train_envs, prefill / config.action_repeat)
+  tools.simulate_2states_goal(random_agent, train_envs, prefill / config.action_repeat)
   writer.flush()
 
   # Build agent
@@ -164,11 +164,11 @@ def train(config):
   state = None
   while step < config.steps:
     print('Start evaluation.')
-    tools.simulate(functools.partial(agent, training=False), train_envs, episodes=1, step=step, target_vel=[[random.random()+0.3]])
+    tools.simulate_2states_goal(functools.partial(agent, training=False), train_envs, episodes=1, step=step, target_vel=[[random.random()+0.3]])
     writer.flush()
     print('Start collection.')
     steps = config.eval_every // config.action_repeat
-    state = tools.simulate(agent, train_envs, steps, state=state, step=step, target_vel=[[random.random()+0.3]])
+    state = tools.simulate_2states_goal(agent, train_envs, steps, state=state, step=step, target_vel=[[random.random()+0.3]])
     step = count_steps(datadir, config)
     print('Saving.')
     agent.save(config.logdir / 'variables.pkl')

@@ -236,7 +236,7 @@ def plot_summary(name, rec, rec_std, true, step=None):
     img = np.concatenate(states[:,i],1)
     tf.summary.image(name+'_'+str(i), np.expand_dims(img,0), step=step)
 
-def simulate(agent, envs, steps=0, episodes=0, state=None, step=0, target_vel=[[1.0]]):
+def simulate_2states_goal(agent, envs, steps=0, episodes=0, state=None, step=0, target_vel=[[1.0]]):
   # Initialize or unpack simulation state.
   if state is None:
     step, episode = 0, 0
@@ -273,6 +273,78 @@ def simulate(agent, envs, steps=0, episodes=0, state=None, step=0, target_vel=[[
     length *= (1 - done)
   # Return new state to allow resuming the simulation.
   return (step - steps, episode - episodes, done, length, obs, agent_env_state, agent_phy_state)
+
+def simulate_2states(agent, envs, steps=0, episodes=0, state=None, step=0):
+  # Initialize or unpack simulation state.
+  if state is None:
+    step, episode = 0, 0
+    done = np.ones(len(envs), np.bool)
+    length = np.zeros(len(envs), np.int32)
+    obs = [None] * len(envs)
+    agent_env_state = None
+    agent_phy_state = None
+  else:
+    step, episode, done, length, obs, agent_env_state, agent_phy_state = state
+  while (steps and step < steps) or (episodes and episode < episodes):
+    # Reset envs if necessary.
+    if done.any():
+      indices = [index for index, d in enumerate(done) if d]
+      promises = [envs[i].reset(step=step) for i in indices]
+      for index, promise in zip(indices, promises):
+        obs[index] = promise
+    # Step agents.
+    obs = {k: np.stack([o[k] for o in obs]) for k in obs[0]}
+    action, agent_env_state, agent_phy_state = agent(obs, done,
+                                                      agent_env_state,
+                                                      agent_phy_state)
+    action = np.array(action)
+    assert len(action) == len(envs)
+    # Step envs.
+    promises = [e.step(a) for e, a in zip(envs, action)]
+    obs, _, done = zip(*[p[:3] for p in promises])
+    obs = list(obs)
+    done = np.stack(done)
+    episode += int(done.sum())
+    length += 1
+    step += (done * length).sum()
+    length *= (1 - done)
+  # Return new state to allow resuming the simulation.
+  return (step - steps, episode - episodes, done, length, obs, agent_env_state, agent_phy_state)
+
+def simulate(agent, envs, steps=0, episodes=0, state=None, step=0):
+  # Initialize or unpack simulation state.
+  if state is None:
+    step, episode = 0, 0
+    done = np.ones(len(envs), np.bool)
+    length = np.zeros(len(envs), np.int32)
+    obs = [None] * len(envs)
+    agent_state = None
+  else:
+    step, episode, done, length, obs, agent_state = state
+  while (steps and step < steps) or (episodes and episode < episodes):
+    # Reset envs if necessary.
+    if done.any():
+      indices = [index for index, d in enumerate(done) if d]
+      promises = [envs[i].reset(step=step) for i in indices]
+      for index, promise in zip(indices, promises):
+        obs[index] = promise
+    # Step agents.
+    obs = {k: np.stack([o[k] for o in obs]) for k in obs[0]}
+    action, agent_state = agent(obs, done, agent_state)
+    action = np.array(action)
+    assert len(action) == len(envs)
+    # Step envs.
+    promises = [e.step(a) for e, a in zip(envs, action)]
+    obs, _, done = zip(*[p[:3] for p in promises])
+    obs = list(obs)
+    done = np.stack(done)
+    episode += int(done.sum())
+    length += 1
+    step += (done * length).sum()
+    length *= (1 - done)
+  # Return new state to allow resuming the simulation.
+  return (step - steps, episode - episodes, done, length, obs, agent_state)
+
 
 
 def count_episodes(directory):
