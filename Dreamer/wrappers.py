@@ -10,7 +10,7 @@ from PIL import Image
 
 class IsaacSim:
   def __init__(self):
-    from RLEnvironments.FollowShoreEnvironment import HeronEnvironment
+    from RLEnvironments.FlexFollowShoreEnvironment import HeronEnvironment
     self._env = HeronEnvironment()
 
   @property
