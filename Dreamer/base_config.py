@@ -1,5 +1,5 @@
-import tools
 import pathlib 
+import Dreamer.tools as tools
 
 def define_config():
   config = tools.AttrDict()
@@ -15,7 +15,9 @@ def define_config():
   config.precision = 32
   config.port = 8080
   # Environment.
-  config.task = 'dmc_walker_walk'
+  config.environment_name = 'lake'
+  config.environment_specs = {"physics_dt":1.0/60.0,"render_dt":1.0/12.0,"variation":0}
+  config.task = 'follow_shore_flex'
   config.envs = 1
   config.parallel = 'none'
   config.action_repeat = 1
@@ -23,6 +25,8 @@ def define_config():
   config.prefill = 2500
   config.eval_noise = 0.0
   config.clip_rewards = 'none'
+  config.headless = True
+  config.livestream = False
   # Model.
   config.deter_size = 300
   config.stoch_size = 30
