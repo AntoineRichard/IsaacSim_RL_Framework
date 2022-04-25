@@ -7,6 +7,7 @@ import glob
 import pathlib
 import sys
 import time
+import random
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['MUJOCO_GL'] = 'egl'
@@ -218,3 +219,57 @@ class DreamerImg2ImgGoalRSSMPhysics(DreamerImg2ImgRSSMPhysics):
     targets = tf.expand_dims(tf.transpose(tf.repeat(targets,img_env_feat.shape[0],1),[1,0]),-1)
     img_full_feat = tf.concat([img_env_feat, img_phy_feat, targets],-1)
     return img_env_feat, img_phy_feat, img_full_feat
+
+def train(config):
+  if config.gpu_growth:
+    for gpu in tf.config.experimental.list_physical_devices('GPU'):
+      tf.config.experimental.set_memory_growth(gpu, True)
+  assert config.precision in (16, 32), config.precision
+  if config.precision == 16:
+    prec.set_policy(prec.Policy('mixed_float16'))
+  config.steps = int(config.steps)
+  config.logdir.mkdir(parents=True, exist_ok=True)
+  print('Logdir', config.logdir)
+
+  # Create environments.
+  datadir = config.logdir / 'episodes'
+  writer = tf.summary.create_file_writer(str(config.logdir), max_queue=1000, flush_millis=20000)
+  writer.set_as_default()
+  train_envs = [make_env(config, writer, 'train', datadir, store=True)]
+  #test_envs = [make_env(config, writer, 'test', datadir, store=False)]
+  actspace = train_envs[0].action_space
+
+  # Prefill dataset with random episodes.
+  step = count_steps(datadir, config)
+  prefill = max(0, config.prefill - step)
+  print(f'Prefill dataset with {prefill} steps.')
+  random_agent = lambda o, d, _, __,___ : ([actspace.sample() for _ in d], None, None)
+  tools.simulate(random_agent, train_envs, prefill / config.action_repeat)
+  writer.flush()
+
+  # Build agent
+  step = count_steps(datadir, config)
+  print(f'Simulating agent for {config.steps-step} steps.')
+  agent = DreamerImg2ImgGoalRSSMPhysics(config, datadir, actspace, writer)
+
+  # Load weights
+  if (config.logdir / 'variables.pkl').exists():
+    print('Load checkpoint.')
+    agent.load(config.logdir / 'variables.pkl')
+  if (config.logdir / 'phy_dynamics_weights.pkl').exists():
+    print('Loading physics_dynamics.')
+    agent._phy_dynamics.load(config.logdir / 'phy_dynamics_weights.pkl')
+
+  # Train and regularly evaluate the agent.
+  state = None
+  while step < config.steps:
+    print('Start evaluation.')
+    tools.simulate(functools.partial(agent, training=False), train_envs, episodes=1, step=step, target_vel=[[random.random()+0.3]])
+    writer.flush()
+    print('Start collection.')
+    steps = config.eval_every // config.action_repeat
+    state = tools.simulate(agent, train_envs, steps, state=state, step=step, target_vel=[[random.random()+0.3]])
+    step = count_steps(datadir, config)
+    print('Saving.')
+    agent.save(config.logdir / 'variables.pkl')
+    agent.export4ROS()
