@@ -87,6 +87,7 @@ class DreamerImg2ImgGoalLinearRSSMPhysics(DreamerImg2ImgGoalRSSMPhysics):
     self.train(next(self._dataset))
 
   def _imagine_ahead(self, env_post, phy_post, targets):
+    factor = tf.math.sigmoid((tf.cast(self._step,tf.float32)/1.0e6)*12 - 6)
     if self._c.pcont:  # Last step could be terminal.
       post = {k: v[:, :-1] for k, v in post.items()}
     # Get initial states
@@ -94,11 +95,11 @@ class DreamerImg2ImgGoalLinearRSSMPhysics(DreamerImg2ImgGoalRSSMPhysics):
     env_start = {k: flatten(v) for k, v in env_post.items()}
     phy_start = {k: flatten(v) for k, v in phy_post.items()}
     # Define Randomization
-    A_rand = tf.random.normal([targets.shape[0]]+tf.transpose(self._phy_dynamics.A).shape)*tf.transpose(self._phy_dynamics.A)*0.015
-    B_rand = tf.random.normal([targets.shape[0]]+tf.transpose(self._phy_dynamics.B).shape)*tf.transpose(self._phy_dynamics.B)*0.015
-    C_rand = tf.random.normal([targets.shape[0]]+tf.transpose(self._phy_dynamics.C).shape)*tf.transpose(self._phy_dynamics.C)*0.01
-    D_rand = tf.random.normal([targets.shape[0]]+self._phy_dynamics.D.shape)*tf.transpose(self._phy_dynamics.D)*0.01
-    E_rand = tf.transpose(tf.ones([2]+[targets.shape[0]])*(tf.random.normal([targets.shape[0]])*0.2)+1.0)
+    A_rand = tf.random.normal([targets.shape[0]]+tf.transpose(self._phy_dynamics.A).shape)*tf.transpose(self._phy_dynamics.A)*0.015*factor
+    B_rand = tf.random.normal([targets.shape[0]]+tf.transpose(self._phy_dynamics.B).shape)*tf.transpose(self._phy_dynamics.B)*0.015*factor
+    C_rand = tf.random.normal([targets.shape[0]]+tf.transpose(self._phy_dynamics.C).shape)*tf.transpose(self._phy_dynamics.C)*0.01*factor
+    D_rand = tf.random.normal([targets.shape[0]]+self._phy_dynamics.D.shape)*tf.transpose(self._phy_dynamics.D)*0.01*factor
+    E_rand = tf.transpose(tf.ones([2]+[targets.shape[0]])*(tf.random.normal([targets.shape[0]])*0.2)+1.0)*factor
     # Define Policy and Physics functions
     policy = lambda env_state, phy_state: self._actor(
         tf.concat([tf.stop_gradient(self._env_dynamics.get_feat(env_state)),

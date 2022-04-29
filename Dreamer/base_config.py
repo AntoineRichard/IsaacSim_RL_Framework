@@ -17,7 +17,7 @@ def define_config():
   # Environment.
   config.world_specs = {"physics_dt":1.0/60.0,"rendering_dt":1.0/12.0}
   config.env_name = 'lake'
-  config.env_specs = {"scene_path":"/LakeSimulation/",
+  config.env_specs = {"scene_path":"/RLEnvironments/Worlds/Lakes/StandaloneLakesWater/",
                         "meta_data_path":"standalone_examples/python_samples/Buoyancy/raw_generation/",
                         "variation":0}
   config.robot_name = 'heron'
