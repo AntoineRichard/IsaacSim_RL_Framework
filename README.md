@@ -22,6 +22,8 @@ We provide the following tasks:
 We provide the following environments:
 - 9 procedurally generated lakes.
 - 9 procedurally generated lakes with solid ground instead of water.
+- 300 Environments similar to the BARN challenge.
+- 300 Environments similar to the BARN challenge but on water.
 
 We provide the following robots:
 - A ClearPath Kingfisher/Heron (LINK).
