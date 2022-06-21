@@ -5,6 +5,7 @@ To simulate the robots and their environment we use NVIDIA's Isaac Sim, a GPU ac
 On top of providing a DREAMER wrapper for Isaac, we also provide a Buoyancy plugin that allows to simulate hydrodynamic effects.
 This plugin is a port of the UUV simulator, a well establish plugin in gazebo community to simulate the behaviors of Unmanned Surface Vehicles (USVs) as well as Autonomous Underwater Vehicles (AUVs).
 
+## What's in the package?
 
 The code provided here allows to train agents to solve various autonomous navigation tasks using a MBRL agent.
 We provide the following tasks:
