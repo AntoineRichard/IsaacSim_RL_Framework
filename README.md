@@ -21,9 +21,11 @@ We provide the following tasks:
 
 We provide the following environments:
 - 9 procedurally generated lakes.
+- 9 procedurally generated lakes with solid ground instead of water.
 
 We provide the following robots:
-- A ClearPath kingfisher/Heron (LINK).
+- A ClearPath Kingfisher/Heron (LINK).
+- A ClearPath Husky (LINK).
 
 This repository allows to reproduce the results presented in the following papers:
 - ICRA: LINK
