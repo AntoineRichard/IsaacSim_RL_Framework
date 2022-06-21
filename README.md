@@ -26,6 +26,7 @@ We provide the following environments:
 We provide the following robots:
 - A ClearPath Kingfisher/Heron (LINK).
 - A ClearPath Husky (LINK).
+- A ClearPath Jackal (LINK).
 
 This repository allows to reproduce the results presented in the following papers:
 - ICRA: LINK
