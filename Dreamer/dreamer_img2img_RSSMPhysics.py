@@ -28,7 +28,6 @@ import Dreamer.tools as tools
 import Dreamer.wrappers as wrappers
 from Dreamer.dreamer_img2img_NoPhysics import DreamerImg2ImgNoPhysics
 from Dreamer.dreamer_img2img_NoPhysics import count_steps, summarize_episode, get_last_episode_reward, make_env  
-from Dreamer.base_config import define_config
 
 class DreamerImg2ImgRSSMPhysics(DreamerImg2ImgNoPhysics):
   def __init__(self, config, datadir, actspace, writer):

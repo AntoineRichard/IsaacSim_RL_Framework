@@ -28,7 +28,6 @@ import Dreamer.tools as tools
 import Dreamer.wrappers as wrappers
 from Dreamer.dreamer_img2img_goals_RSSMPhysics import DreamerImg2ImgGoalRSSMPhysics
 from Dreamer.dreamer_img2img_goals_RSSMPhysics import count_steps, load_dataset, summarize_episode, get_last_episode_reward, make_env, preprocess
-from Dreamer.base_config import define_config
 
 class DreamerImg2ImgGoalLinearRSSMPhysics(DreamerImg2ImgGoalRSSMPhysics):
   def __init__(self, config, datadir, actspace, writer):

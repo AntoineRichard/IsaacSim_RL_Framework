@@ -25,7 +25,6 @@ sys.path.append(str(pathlib.Path(__file__).parent))
 import Dreamer.models as models
 import Dreamer.tools as tools
 import Dreamer.wrappers as wrappers
-from Dreamer.base_config import define_config
 
 class DreamerImg2ImgNoPhysics(tools.Module):
   def __init__(self, config, datadir, actspace, writer):
