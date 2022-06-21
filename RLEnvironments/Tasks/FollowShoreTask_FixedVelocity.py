@@ -30,7 +30,7 @@ class FollowShoreFixedVelocity(BaseTask):
     def computeReward(self, obs):
         min_dist = self.ideal_dist - np.min(obs["laser"])
         dist_reward = max(-20.0, (1. - min_dist*min_dist*0.5)*self.pose_coeff)
-        robot_vel = obs["linear_velocity"]
+        robot_vel = obs["linear_velocity"][0]
         vel_reward = (1 - np.abs((self.target_vel-robot_vel)/self.target_vel))*self.vel_coeff
         return dist_reward + vel_reward
 
@@ -45,7 +45,7 @@ class FollowShoreFixedVelocity(BaseTask):
 
     def reset(self, step=0):
         self.lake.reset()
-        position, rotation = self.FS.getValidLocation(step, mode="power")
+        position, rotation = self.getValidLocation(step, mode="power")
         self.robot.teleport(position, rotation)
         self.numresets += 1
         self.prev_phy = [0,0,0]
@@ -56,6 +56,8 @@ class FollowShoreFixedVelocity(BaseTask):
         self.ideal_dist = task_settings["ideal_dist"]
         self.Proj = LaserProjector(task_settings["ideal_dist"])
         self.pose_coeff = task_settings["pose_coeff"]
+        self.target_vel = task_settings["target_vel"]
+        self.vel_coeff = task_settings["vel_coeff"]
         # Setup gym data
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
         self.observation_space = {"image":spaces.Box(low=0, high=255, shape=(64,64,3), dtype=np.uint8),
