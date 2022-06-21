@@ -1,9 +1,10 @@
-from pxr import UsdGeom
+from pxr import UsdGeom, Usd
 from gym import spaces
 import numpy as np
 import omni
 
 from omni.isaac.core import World
+import RLEnvironments.IsaacUtils as utils
 
 class BaseTask:
     def __init__(self, WorldLoader, RobotLoader, world_settings, task_settings, scene_settings):
@@ -15,9 +16,8 @@ class BaseTask:
         self.lake = WorldLoader(self.stage, self.world, **scene_settings)
         # Initialize and spawn the robot
         self.robot = RobotLoader(self.stage)
-        position, rotation = self.lake.getValidLocation(0)
-        self.robot.spawn(position)
-        self.world.step()
+        self.robot.spawn([0,0,0])
+        self.world.step(True)
         self.world.add_physics_callback("robot_dyn", self.robot.update)
         self.robot.loadPlugins()
         # Start simulation

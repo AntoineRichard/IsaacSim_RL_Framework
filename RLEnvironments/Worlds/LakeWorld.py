@@ -4,12 +4,12 @@ from RLEnvironments.Worlds.BaseWorld import BaseWorld
 
 class SingleLakeWorld(BaseWorld):
     def __init__(self, stage, world, **kwargs):
-        super.__init__(stage, world, **kwargs)
+        super().__init__(stage, world, **kwargs)
     
-    def loadWorld(self, variation="0", scene_path="/LakeSimulation/", **kwargs):
-        scene_path = scene_path+"gen"+str(variation)+"_lake.usd"
+    def loadWorld(self, variation="0", scene_path="/RLEnvironments/Worlds/Lakes/StandaloneLakesWater/", **kwargs):
+        scene_path = self.nucleus_server + scene_path+"Lake_"+str(variation)+".usd"
         self.lake = []
-        self.lake = utils.createObject('/World', self.stage, scene_path, False, position=Gf.Vec3d(0,0,0), group=self.lake, allow_physics=False)
+        self.lake = utils.addReference('/World', self.stage, scene_path)
     
     def reset(self):
         pass

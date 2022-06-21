@@ -11,8 +11,8 @@ import numpy as np
 
 class HeronWrapper(BaseRobotWrapper):
     def __init__(self, stage):
-        super.__init__(stage)
-        self.activateLidar()
+        super().__init__(stage)
+        self.asset_path = self.nucleus_server + "/LakeSimulation/heron_with_laser.usd"#"/RLEnvironments/Robots/heron_with_laser.usd"
         self.ar = None
         self.target = [0,0]
 
@@ -22,10 +22,10 @@ class HeronWrapper(BaseRobotWrapper):
         from BuoyancyPhysics.Thruster import ThrusterPlugin
         # Hydrodynamics simulation with python plugin
         self.UWO = UnderWaterObject(self.stage, self.PhysXIFace, self.DCIFace)
-        self.UWO.Load(self.HydroSettings)
-        self.base_link = self.HydroSettings["link"][0]["name"]
+        self.UWO.Load(HeronHydroSettings)
+        self.base_link = HeronHydroSettings["link"][0]["name"]
         self.THR = []
-        for i, settings in enumerate(self.ThrusterSettings):
+        for i, settings in enumerate(HeronThrustersSettings):
             self.THR.append(ThrusterPlugin(self.stage, self.PhysXIFace, self.DCIFace))
             self.THR[i].Load(settings)
         # Add perfect pose sensor

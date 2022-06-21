@@ -27,6 +27,19 @@ def Euler2Quat(ypr):
     qz = cypr[0]*cypr[1]*sypr[1] - sypr[0]*sypr[1]*cypr[2]
     return Gf.Quaternion(qw, Gf.Vec3d(qx,qy,qz))
 
+def addReference(prefix, stage, path):
+    """! Creates a 3D object from a USD file and adds it to the stage
+
+    @type prefix: str
+    @param prefix: The name of the object in the world (does not have to be unique).
+    @type stage: pxr.UsdStage
+    @param stage: The name of the stage the objects belong to.
+    @type path: str
+    @param path: The path of to the USD file on the docker/drive.
+    """
+    prim = stage.GetPrimAtPath(prefix)
+    prim.GetReferences().AddReference(path)
+
 def createObject(prefix, stage, path, material, position=Gf.Vec3d(0, 0, 0), rotation=Gf.Quaternion(1, Gf.Vec3d(0,0,0)), group=[], allow_physics=False, density=1000, scale=Gf.Vec3d(1.0,1.0,1.0), is_instance=False):
     """! Creates a 3D object from a USD file and adds it to the stage
 

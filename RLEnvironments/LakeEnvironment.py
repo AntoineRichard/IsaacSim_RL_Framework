@@ -9,7 +9,7 @@ class SingleLakeEnvironment:
         nucleus_server = utils.get_nucleus_server()
         scene_path = nucleus_server + scene_path
         self.setupPhysics()
-        self.loadWorld(scene_path+"gen"+str(variation)+"_lake.usd")
+        self.loadWorld(scene_path+"Lake_"+str(variation)+".usd")
         self.world.step()
         print("waiting for materials to load...")
     

@@ -5,8 +5,7 @@ class BaseWorld:
     def __init__(self, stage, world, **kwargs):
         self.stage = stage
         self.world = world
-        nucleus_server = utils.get_nucleus_server()
-        scene_path = nucleus_server + scene_path
+        self.nucleus_server = utils.get_nucleus_server()
         self.setupPhysics()
         self.loadWorld(**kwargs)
         self.world.step()

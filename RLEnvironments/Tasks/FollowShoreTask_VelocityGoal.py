@@ -10,11 +10,7 @@ from omni.isaac.core import World
 
 class FollowShoreVelocityGoal(BaseTask):
     def __init__(self, WorldLoader, RobotLoader, world_settings, task_settings, scene_settings):
-        super.__init__(WorldLoader, RobotLoader, world_settings, task_settings, scene_settings)
-        for i in range(10):
-            self.world.step()
-        self.reset()
-        self.world.step()
+        super().__init__(WorldLoader, RobotLoader, world_settings, task_settings, scene_settings)
 
     def step(self, action):
         # Update robot commands
