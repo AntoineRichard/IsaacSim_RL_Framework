@@ -8,6 +8,13 @@ This plugin is a port of the UUV simulator, a well establish plugin in gazebo co
 ## What's in the package?
 
 The code provided here allows to train agents to solve various autonomous navigation tasks using a MBRL agent.
+
+We provide the following agents:
+- Vanilla DREAMER (LINK).
+- DREAMER with physical state (LINK).
+- Goal Conditioned DREAMER with physical state.
+- Goal Conditioned DREAMER with physical state and in imagination domain randomization.
+
 We provide the following tasks:
 - Shore following : following of a shore, or a side wall, at a given distance and velocity.
 - Goal conditioned shore following : following of a shore, or side wall, at a given distance. The velocity is given as a condition to the agent.
