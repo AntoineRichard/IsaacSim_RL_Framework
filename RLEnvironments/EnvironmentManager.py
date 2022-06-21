@@ -19,14 +19,14 @@ def getEnvironment(environment_name, task_name, robot_name, world_specs={}, env_
         from RLEnvironments.Tasks.FollowShoreTask_VelocityGoal import FollowShoreVelocityGoal as Task
         needed_task_specs = ["ideal_dist", "min_dist", "max_dist",
                              "warmup", "target_step", "alpha", "isaac_res",
-                             "map_res","ideal_dist","ideal_dist","pose_coeff"]
+                             "map_res","pose_coeff"]
         assert (set(task_specs)==set(needed_task_specs))
         return Task(WorldLoader, RobotLoader, world_specs, task_specs, env_specs)
     elif task_name=="follow_shore_fixed_velocity":
         from RLEnvironments.Tasks.FollowShoreTask_FixedVelocity import FollowShoreFixedVelocity as Task
         needed_task_specs = ["ideal_dist", "min_dist", "max_dist",
                              "warmup", "target_step", "alpha", "isaac_res", "target_vel",
-                             "map_res","ideal_dist","ideal_dist","pose_coeff", "vel_coeff"]
+                             "map_res","pose_coeff", "vel_coeff"]
         assert (set(task_specs)==set(needed_task_specs))
         return Task(WorldLoader, RobotLoader, world_specs, task_specs, env_specs)
     else:
