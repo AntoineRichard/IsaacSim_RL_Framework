@@ -18,12 +18,14 @@ We provide the following agents:
 We provide the following tasks:
 - Shore following : following of a shore, or a side wall, at a given distance and velocity.
 - Goal conditioned shore following : following of a shore, or side wall, at a given distance. The velocity is given as a condition to the agent.
+- Goal reaching : Tasking a system with reaching a state defined goal.
+- Station Keeping : Tasking a system to keep a steady position.
+- Heading following with obstacle avoidance.
 
 We provide the following environments:
-- 9 procedurally generated lakes.
-- 9 procedurally generated lakes with solid ground instead of water.
-- 300 Environments similar to the BARN challenge.
-- 300 Environments similar to the BARN challenge but on water.
+- 9 procedurally generated lakes, both with solid ground and water. (LINK)
+- 300 Environments similar to the BARN challenge, both with solid ground and water. (LINK)
+- On the fly generation of BARN style environments, both with solid ground and water.
 
 We provide the following robots:
 - A ClearPath Kingfisher/Heron (LINK).
