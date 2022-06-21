@@ -8,3 +8,6 @@ This plugin is a port of the UUV simulator, a well establish plugin in gazebo co
 ## Requirement
 
 To train agents you will need an Nvidia GPU with Ray-Tracing. We recommended using GPUs with 12Gb of RAM or more (RTX 2080Ti, RTX3090, A5000, A6000).
+
+
+You will also need to install Isaac Sim. To install Isaac Sim you can follow NVIDIA's tutorial here:. We would recomment using their launcher as it makes the whole installation process easier that going with a docker. However, if you want to install it using the launcher, you will need a machine running ubuntu 18.04 (as of June 2022).
