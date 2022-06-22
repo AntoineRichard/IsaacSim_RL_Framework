@@ -7,7 +7,7 @@ This plugin is a port of the UUV simulator, a well establish plugin in gazebo co
 
 ## What's in the package?
 
-The code provided here allows to train agents to solve various autonomous navigation tasks using a MBRL agent. Compared to previous release of our code, this repository does not use ROS for training and does not requires ROS to run the simulation at all. However, we provide the necessary tools to deploy the models learned with ROS!
+The code provided here allows to train agents to solve various autonomous navigation tasks using a MBRL agent. Compared to previous release of our code, this repository does not use ROS for training and does not requires ROS to run the simulation at all. However, we provide the necessary tools to deploy the models inside ROS nodes!
 
 We provide the following agents:
 - Vanilla DREAMER (LINK).
