@@ -17,9 +17,9 @@ We provide the following agents:
 
 We provide the following tasks:
 - Shore following : following of a shore, or a side wall, at a given distance and velocity.
-- Goal conditioned shore following : following of a shore, or side wall, at a given distance. The velocity is given as a condition to the agent.
+- Velocity conditioned shore following : following of a shore, or side wall, at a given distance. The velocity is given as a condition to the agent.
 - Goal reaching : Tasking a system with reaching a state defined goal.
-- Station Keeping : Tasking a system to keep a steady position.
+- Station keeping : Tasking a system to keep a steady position.
 - Heading following with obstacle avoidance.
 
 We provide the following environments:
