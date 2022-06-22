@@ -3,12 +3,20 @@ def getEnvironment(environment_name, task_name, robot_name, world_specs={}, env_
     assert (set(world_specs) == set(needed_world_specs)), "Missing some world specs. Exepected fields are :"+str(needed_world_specs)+". Please edit the configuration."
     if robot_name == "heron":
         from RLEnvironments.Robots.HeronWrapper import HeronWrapper as RobotLoader
+    elif robot_name == "husky":
+        from RLEnvironments.Robots.HuskyWrapper import HuskyWrapper as RobotLoader
     else:
         raise ValueError("unknown robot: "+str(robot_name))
 
-    if environment_name=="lake":
-        from RLEnvironments.Worlds.LakeWorld import SingleLakeWorld as WorldLoader
+    if environment_name=="lake_water":
+        from RLEnvironments.Worlds.LakeWater import SingleLakeWorld as WorldLoader
         assert (robot_name == "heron"), "This environment is meant to be used with the heron. Please edit the config."
+        needed_env_specs = ["scene_path", "meta_data_path", "variation"]
+        assert (set(needed_env_specs) == set(env_specs)), "Missing some environment specs. Exepected fields are :"+str(needed_env_specs)+". Please edit the configuration."
+        assert (type(env_specs["variation"]) == int), "Variation spec must be an int."
+    elif environment_name=="lake_ground":
+        from RLEnvironments.Worlds.LakeGround import SingleLakeWorld as WorldLoader
+        assert (robot_name != "heron"), "This robot (the heron) is meant to be used in water. Please edit the config."
         needed_env_specs = ["scene_path", "meta_data_path", "variation"]
         assert (set(needed_env_specs) == set(env_specs)), "Missing some environment specs. Exepected fields are :"+str(needed_env_specs)+". Please edit the configuration."
         assert (type(env_specs["variation"]) == int), "Variation spec must be an int."

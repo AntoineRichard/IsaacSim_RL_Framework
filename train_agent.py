@@ -6,7 +6,7 @@ import argparse
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    from Dreamer.base_config import define_config
+    from Configurations.Husky_fixed_config import define_config
     from Dreamer.tools import args_type
     for key, value in define_config().items():
         parser.add_argument(f'--{key}', type=args_type(value), default=value)
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         ext_manager.set_extension_enabled_immediate("omni.kit.livestream.core", True)
         ext_manager.set_extension_enabled_immediate("omni.kit.livestream.native", True)
 
-    from Dreamer.dreamer_img2img_goals_LinearRSSMPhysics import train
+    from Dreamer.dreamer_img2img_RSSMPhysics import train
 
     train(config)
     simulation_app.close()
