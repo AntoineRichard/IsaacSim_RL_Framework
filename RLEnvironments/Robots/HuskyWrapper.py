@@ -17,6 +17,10 @@ class HuskyWrapper(BaseRobotWrapper):
         self.right_wheel_joints = ["front_right_wheel", "rear_right_wheel"]
         self.dist_chassis = 0.275
         self.wheel_radius = 0.165
+        self.wheel_separation_multipier = 1.875
+        self.wheel_radius_multiplier = 1.0
+        self.vlin_max = 1.0
+        self.vang_max = 2.0
         self.twist = [0,0]
         self.vw_L = 0
         self.vw_R = 0
@@ -80,18 +84,20 @@ class HuskyWrapper(BaseRobotWrapper):
         self.applyCmd()
     
     def updateCommands(self, data):
+        data[0] = data[0]*self.vlin_max
+        data[1] = data[1]*self.vang_max
         data = self.smoothCommands(data)
         self.twist = data.copy()
         # Commands are sent as a twist (linear_vel,angular_vel).
         # It must be transformed to left right wheel velocities in rad/s.
-        self.vw_L = (data[0] - data[1]*self.dist_chassis)/self.wheel_radius
-        self.vw_R = (data[0] + data[1]*self.dist_chassis)/self.wheel_radius
+        self.vw_L = (data[0] - self.wheel_separation_multipier*data[1]*self.dist_chassis)/(self.wheel_radius*self.wheel_radius_multiplier)
+        self.vw_R = (data[0] + self.wheel_separation_multipier*data[1]*self.dist_chassis)/(self.wheel_radius*self.wheel_radius_multiplier)
         
     def applyCmd(self):
         # Only ran at start-up
         if self.ar is None:
             # Grabs the articulation at the robot path
-            self.ar = self.DCIFace.get_articulation("/husky") # ar is an ID
+            self.ar = self.DCIFace.get_articulation("/husky")
             self.base_link_id = self.DCIFace.get_articulation_root_body(self.ar)
             # Gets the root of the articulation/robot
             self.chassis = self.DCIFace.get_articulation_root_body(self.ar)
