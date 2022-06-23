@@ -5,6 +5,8 @@ def getEnvironment(environment_name, task_name, robot_name, world_specs={}, env_
         from RLEnvironments.Robots.HeronWrapper import HeronWrapper as RobotLoader
     elif robot_name == "husky":
         from RLEnvironments.Robots.HuskyWrapper import HuskyWrapper as RobotLoader
+    elif robot_name == "jackal":
+        from RLEnvironments.Robots.JackalWrapper import JackalWrapper as RobotLoader
     else:
         raise ValueError("unknown robot: "+str(robot_name))
 
