@@ -28,7 +28,7 @@ def define_config():
                         "warmup":2.5e5,
                         "target_step":1e6,
                         "alpha":1.0,
-                        "target_vel":1.0,
+                        "target_vel":0.8,
                         "isaac_res":100,
                         "map_res":0.1,
                         "vel_coeff":1.0,
